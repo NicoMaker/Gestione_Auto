@@ -839,10 +839,4 @@ main {
         min-width: 600px; /* Esempio: imposta una larghezza minima se le colonne sono molte */
         width: max-content; /* Oppure usa max-content per la larghezza minima */
     }
-
-    /* Se hai elementi di grande larghezza non tabellari, aggiungi la classe .horizontal-scroll-container */
-    /* .horizontal-scroll-container {
-        overflow-x: auto;
-        padding-bottom: 10px; // Aggiunge spazio sotto per vedere bene la barra di scroll
-    } */
 }

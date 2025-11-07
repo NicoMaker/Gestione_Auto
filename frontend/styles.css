@@ -812,3 +812,37 @@ main {
         width: 100%;
     } */
 }
+
+@media (max-width: 768px) {
+    /* ... (Il codice precedente per i bottoni full-width rimane utile qui) ... */
+
+    /* Regola i dialog per evitare che il contenuto troppo largo forzi lo scroll globale */
+    .dialog {
+        /* Permette al dialog di contenere elementi larghi senza uscire dallo schermo */
+        width: 95%; /* Lascia un piccolo margine laterale */
+        max-width: 95%;
+        /* Aggiungo una regola per lo scroll orizzontale se il contenuto lo richiede */
+        overflow-x: hidden; /* Nascondi lo scroll orizzontale del dialog stesso */
+    }
+
+    /* **ABILITA LO SCROLL ORIZZONTALE SUL CORPO DEL DIALOG** */
+    .dialog-body {
+        /* Se il contenuto (es. un form o una tabella) supera la larghezza, permetti lo scroll */
+        overflow-x: auto; 
+        /* Mantieni lo scroll verticale se il body è troppo lungo */
+        overflow-y: auto; 
+    }
+    
+    /* Regola le tabelle, se presenti, per assicurare che forzino lo scroll */
+    .dialog-body table {
+        /* Se la tabella è più larga del dialog, questo le impedisce di restringersi */
+        min-width: 600px; /* Esempio: imposta una larghezza minima se le colonne sono molte */
+        width: max-content; /* Oppure usa max-content per la larghezza minima */
+    }
+
+    /* Se hai elementi di grande larghezza non tabellari, aggiungi la classe .horizontal-scroll-container */
+    /* .horizontal-scroll-container {
+        overflow-x: auto;
+        padding-bottom: 10px; // Aggiunge spazio sotto per vedere bene la barra di scroll
+    } */
+}

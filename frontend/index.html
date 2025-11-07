@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gestione Auto - Sistema di manutenzione veicoli</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <link
+      rel="icon"
+      type="image/png"
+      href="https://tse1.mm.bing.net/th/id/OIP.kQpL0TADFnsvlZ6ujg16xQHaHa?rs=1&pid=ImgDetMain&o=7&rm=3"
+    />
+  </head>
+
+  <body>
+    <header class="header">
+      <div class="container">
+        <div class="header-content">
+          <div class="logo-section">
+            <div class="logo-icon">
+              <i class="fas fa-car"></i>
+            </div>
+            <div class="logo-text">
+              <h1>Gestione Auto</h1>
+              <p>Sistema di manutenzione veicoli</p>
+            </div>
+          </div>
+          <div class="header-actions">
+            <button
+              id="themeToggle"
+              class="theme-toggle"
+              aria-label="Cambia tema"
+            >
+              <i class="fas fa-moon"></i>
+              <span class="toggle-label">Tema</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="container">
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-content">
+            <div class="stat-info">
+              <p class="stat-label" id="totalVehiclesLabel">Veicoli Totali</p>
+              <p class="stat-value" id="totalVehicles">0</p>
+            </div>
+            <div class="stat-icon stat-icon-blue">
+              <i class="fas fa-car"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-content">
+            <div class="stat-info">
+              <p class="stat-label" id="totalMaintenancesLabel">Manutenzioni</p>
+              <p class="stat-value" id="totalMaintenances">0</p>
+            </div>
+            <div class="stat-icon stat-icon-green">
+              <i class="fas fa-bell"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-content">
+            <div class="stat-info">
+              <p class="stat-label" id="activeAlertsLabel">Scadenze Attive</p>
+              <p class="stat-value" id="activeAlerts">0</p>
+            </div>
+            <div class="stat-icon stat-icon-red" id="alertsIcon">
+              <i class="fas fa-exclamation-triangle"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="alertsSection" class="alerts-section" style="display: none">
+        <div class="section-header">
+          <i class="fas fa-exclamation-triangle alert-icon"></i>
+          <h2>Scadenze in Arrivo</h2>
+        </div>
+        <div id="alertsContainer"></div>
+      </div>
+
+      <div class="vehicles-section-header">
+        <h2>I Tuoi Veicoli</h2>
+        <button class="btn btn-primary" id="btnAddVehicle">
+          <i class="fas fa-plus"></i>
+          Aggiungi Veicolo
+        </button>
+      </div>
+
+      <div id="vehiclesContainer" class="vehicles-grid"></div>
+
+      <div id="emptyState" class="empty-state">
+        <i class="fas fa-car empty-icon"></i>
+        <h3>Nessun veicolo</h3>
+        <p>Inizia aggiungendo il tuo primo veicolo</p>
+        <button class="btn btn-primary" id="btnAddVehicleEmpty">
+          <i class="fas fa-plus"></i>
+          Aggiungi Veicolo
+        </button>
+      </div>
+    </main>
+
+    <div id="dialogAddVehicle" class="dialog-overlay">
+      <div class="dialog">
+        <div class="dialog-header">
+          <h3 id="dialogAddVehicleTitle">Aggiungi Nuovo Veicolo</h3>
+        </div>
+        <form id="formAddVehicle">
+          <div class="dialog-body">
+            <div class="form-group">
+              <label for="brand">Marca</label>
+              <input type="text" id="brand" placeholder="es. Fiat" required />
+            </div>
+
+            <div class="form-group">
+              <label for="model">Modello</label>
+              <input type="text" id="model" placeholder="es. Panda" required />
+            </div>
+
+            <div class="form-group">
+              <label for="plate">Targa</label>
+              <input
+                type="text"
+                id="plate"
+                placeholder="es. AB123CD"
+                required
+              />
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="year">Anno</label>
+                <input type="number" id="year" placeholder="2020" required />
+              </div>
+
+              <div class="form-group">
+                <label for="currentKm">Km Attuali</label>
+                <input type="number" id="currentKm" placeholder="50000" />
+              </div>
+            </div>
+          </div>
+          <div class="dialog-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              id="btnCancelAddVehicle"
+            >
+              Annulla
+            </button>
+            <button type="submit" class="btn btn-primary">Salva Veicolo</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="dialogAddMaintenance" class="dialog-overlay">
+      <div class="dialog">
+        <div class="dialog-header">
+          <h3>Aggiungi Manutenzione</h3>
+          <p class="dialog-subtitle" id="maintenanceVehicleInfo"></p>
+        </div>
+        <form id="formAddMaintenance" class="dialog-content-form">
+          <div class="dialog-body">
+            <div class="form-group">
+              <label for="type">Tipo Manutenzione</label>
+              <select id="type" required>
+                <option value="">Seleziona tipo</option>
+                <option value="Collaudo">Collaudo</option>
+                <option value="Cambio Olio">Cambio Olio</option>
+                <option value="Tagliando">Tagliando</option>
+                <option value="Revisione">Revisione</option>
+                <option value="Cambio Gomme">Cambio Gomme</option>
+                <option value="Frizione">Frizione</option>
+                <option value="Freni">Freni</option>
+                <option value="Filtri">Filtri</option>
+                <option value="Controllo">Controllo</option>
+                <option value="Altro">Altro</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="dueDate">Data Scadenza</label>
+              <input type="date" id="dueDate" required />
+            </div>
+
+            <div class="form-group">
+              <label for="dueKm">Km Scadenza (opzionale)</label>
+              <input type="number" id="dueKm" placeholder="es. 60000" />
+            </div>
+
+            <div class="form-group">
+              <label for="notifyDaysBefore"
+                >Avvisa con (giorni di anticipo)</label
+              >
+              <input
+                type="number"
+                id="notifyDaysBefore"
+                value="7"
+                min="1"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="notes">Note (opzionale)</label>
+              <input type="text" id="notes" placeholder="Aggiungi note..." />
+            </div>
+          </div>
+          <div class="dialog-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              id="btnCancelAddMaintenance"
+            >
+              Annulla
+            </button>
+            <button type="submit" class="btn btn-primary">
+              Salva Manutenzione
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="dialogVehicleDetails" class="dialog-overlay">
+      <div class="dialog dialog-large">
+        <div class="dialog-header">
+          <h3 id="detailsVehicleName"></h3>
+          <p class="dialog-subtitle" id="detailsVehicleInfo"></p>
+        </div>
+        <div class="dialog-body">
+          <div class="card update-km-card">
+            <label for="updateKm">Aggiorna Chilometraggio</label>
+            <div class="update-km-controls">
+              <input type="number" id="updateKm" class="update-km-input" />
+              <button class="btn btn-primary" id="btnUpdateKm">Aggiorna</button>
+            </div>
+          </div>
+
+          <div class="maintenances-list-section">
+            <h3>
+              Manutenzioni Programmate <span id="maintenanceCount"></span>
+            </h3>
+            <div id="maintenancesList"></div>
+          </div>
+        </div>
+        <div class="dialog-footer">
+          <button class="btn btn-primary" id="btnEditVehicleFromDetails">
+            <i class="fas fa-pencil-alt"></i> Modifica Veicolo
+          </button>
+          <button class="btn btn-primary" id="btnAddMaintenanceFromDetails">
+            <i class="fas fa-plus"></i> Aggiungi Manutenzione
+          </button>
+          <button class="btn btn-secondary" id="btnCloseDetails">Chiudi</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="dialogEditMaintenance" class="dialog-overlay">
+      <div class="dialog">
+        <div class="dialog-header">
+          <h3>Modifica Manutenzione</h3>
+        </div>
+        <form id="formEditMaintenance" class="dialog-content-form">
+          <div class="dialog-body">
+            <div class="form-group">
+              <label for="editType">Tipo di Manutenzione</label>
+              <select id="editType" required>
+                <option value="">Seleziona tipo</option>
+                <option value="Collaudo">Collaudo</option>
+                <option value="Cambio Olio">Cambio Olio</option>
+                <option value="Tagliando">Tagliando</option>
+                <option value="Revisione">Revisione</option>
+                <option value="Cambio Gomme">Cambio Gomme</option>
+                <option value="Frizione">Frizione</option>
+                <option value="Freni">Freni</option>
+                <option value="Filtri">Filtri</option>
+                <option value="Controllo">Controllo</option>
+                <option value="Altro">Altro</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="editDueDate">Data Scadenza</label>
+              <input type="date" id="editDueDate" required />
+            </div>
+
+            <div class="form-group">
+              <label for="editDueKm">Chilometraggio Scadenza (opzionale)</label>
+              <input type="number" id="editDueKm" placeholder="Es. 150000" />
+            </div>
+
+            <div class="form-group">
+              <label for="editNotifyDaysBefore">Giorni di preavviso</label>
+              <input type="number" id="editNotifyDaysBefore" value="7" />
+            </div>
+
+            <div class="form-group form-group-checkbox">
+              <input type="checkbox" id="editCompleted" />
+              <label
+                for="editCompleted"
+                style="display: inline-block; margin-left: 10px"
+                >Manutenzione Completata</label
+              >
+            </div>
+            <div class="form-group">
+              <label for="editNotes">Note (opzionale)</label>
+              <input
+                type="text"
+                id="editNotes"
+                placeholder="Aggiungi note..."
+              />
+            </div>
+          </div>
+          <div class="dialog-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              id="btnCancelEditMaintenance"
+            >
+              Annulla
+            </button>
+            <button type="submit" class="btn btn-primary">
+              Salva Modifiche
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="dialogConfirm" class="dialog-overlay">
+      <div class="dialog">
+        <div class="dialog-header">
+          <h3 id="confirmDialogTitle">Conferma Eliminazione</h3>
+        </div>
+        <div class="dialog-body">
+          <p id="confirmDialogMessage">
+            Sei sicuro di voler procedere con l'eliminazione?
+          </p>
+        </div>
+        <div class="dialog-actions">
+          <button type="button" class="btn btn-secondary" id="btnCancelConfirm">
+            Annulla
+          </button>
+          <button type="button" class="btn btn-danger" id="btnConfirmAction">
+            Elimina
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>

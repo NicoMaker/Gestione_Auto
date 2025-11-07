@@ -774,3 +774,41 @@ main {
         max-width: 95%;
     }
 }
+
+@media (max-width: 768px) {
+    /* Applica il layout a colonna a tutti i principali contenitori di azioni */
+    .dialog-footer,
+    .dialog-actions,
+    .vehicle-actions,
+    .header-actions {
+        /* Impila i pulsanti uno sopra l'altro */
+        flex-direction: column;
+        /* Assicura che il contenitore occupi tutta la larghezza disponibile */
+        width: 100%; 
+        /* Centra/allinea gli elementi impilati */
+        align-items: stretch;
+        /* Aggiunge un po' di spazio tra i pulsanti impilati */
+        gap: 10px; 
+        /* Rimuove eventuali allineamenti orizzontali precedenti */
+        justify-content: center; 
+    }
+
+    /* Rende tutti i pulsanti all'interno di questi contenitori a larghezza piena */
+    .dialog-footer .btn,
+    .dialog-actions .btn,
+    .vehicle-actions .btn,
+    .header-actions .btn {
+        width: 100%;
+        /* Rimuove eventuali margini laterali che potrebbero impedire il full-width */
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    /* Se hai altri gruppi di pulsanti in linea, potresti usare una classe generica come .btn-group */
+    /* .btn-group {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+    } */
+}

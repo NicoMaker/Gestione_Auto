@@ -1,7 +1,7 @@
-// script.js (MODIFICATO PER USARE L'API BACKEND NODE.JS)
+// script.js (COMPLETO CON LOGICA CRUD, UI, GESTIONE JSON E ORDINAMENTO)
 
 // ===================================
-// FUNZIONI DI ACCESSO ALL'API (CRUD)
+// FUNZIONI DI ACCESSO ALL'API (CRUD) - Simulazione per Node.js/JSON-Server
 // ===================================
 
 /**
@@ -10,12 +10,13 @@
  */
 async function getVehicles() {
     try {
+        // Simula la chiamata a un API (es. JSON-Server /api/vehicles)
         const response = await fetch('/api/vehicles');
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         return await response.json();
     } catch (error) {
         console.error("Errore nel recupero dei veicoli:", error);
-        return [];
+        return []; // Ritorna array vuoto in caso di fallimento
     }
 }
 
@@ -28,7 +29,6 @@ async function saveVehicle(vehicle) {
     const method = vehicle.id ? 'PUT' : 'POST';
     const url = vehicle.id ? `/api/vehicles/${vehicle.id}` : '/api/vehicles';
 
-    // Per i veicoli POST, il campo ID sarà ignorato dal backend
     const bodyData = {
         brand: vehicle.brand,
         model: vehicle.model,
@@ -44,7 +44,7 @@ async function saveVehicle(vehicle) {
             body: JSON.stringify(bodyData)
         });
         if (!response.ok) {
-            const errorData = await response.json();
+            const errorData = await response.json().catch(() => ({ error: 'Unknown Error' }));
             throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
         }
         return await response.json();
@@ -62,13 +62,9 @@ async function saveVehicle(vehicle) {
  */
 async function deleteVehicle(vehicleId) {
     try {
-        const response = await fetch(`/api/vehicles/${vehicleId}`, {
-            method: 'DELETE'
-        });
-        if (response.status === 404) {
-            throw new Error("Veicolo non trovato.");
-        }
-        // Il backend restituisce 204 No Content in caso di successo
+        const response = await fetch(`/api/vehicles/${vehicleId}`, { method: 'DELETE' });
+        // Assume 200 OK o 204 No Content per successo
+        if (response.status === 404) throw new Error("Veicolo non trovato.");
         if (!response.ok && response.status !== 204) throw new Error(`HTTP error! status: ${response.status}`);
         return true;
     } catch (error) {
@@ -104,11 +100,10 @@ async function saveMaintenance(maintenance) {
 
     // Assicurarsi che i dati siano nel formato corretto per il backend
     const bodyData = {
-        // vehicleId è necessario per POST, e non viene modificato per PUT
         vehicleId: maintenance.vehicleId,
         type: maintenance.type,
-        dueDate: maintenance.dueDate,
-        dueKm: maintenance.dueKm ? parseInt(maintenance.dueKm) : null,
+        dueDate: maintenance.dueDate || null,
+        dueKm: maintenance.dueKm || null,
         notifyDaysBefore: parseInt(maintenance.notifyDaysBefore) || 7,
         notes: maintenance.notes,
         completed: maintenance.completed || false,
@@ -137,12 +132,8 @@ async function saveMaintenance(maintenance) {
  */
 async function deleteMaintenance(maintenanceId) {
     try {
-        const response = await fetch(`/api/maintenances/${maintenanceId}`, {
-            method: 'DELETE'
-        });
-        if (response.status === 404) {
-            throw new Error("Manutenzione non trovata.");
-        }
+        const response = await fetch(`/api/maintenances/${maintenanceId}`, { method: 'DELETE' });
+        if (response.status === 404) throw new Error("Manutenzione non trovata.");
         if (!response.ok && response.status !== 204) throw new Error(`HTTP error! status: ${response.status}`);
         return true;
     } catch (error) {
@@ -153,51 +144,134 @@ async function deleteMaintenance(maintenanceId) {
 }
 
 // ===================================
-// GESTIONE STATO E UI (Adattata per Async)
+// GESTIONE TIPI MANUTENZIONE DA JSON E ORDINAMENTO ALFABETICO (NUOVA LOGICA)
 // ===================================
 
+let maintenanceTypes = []; // Array per i tipi di manutenzione dal JSON (ordinato)
+
+/**
+ * Recupera e ordina i tipi di manutenzione dal file JSON.
+ * @returns {Promise<Array>} Array di stringhe dei tipi di manutenzione, ordinati alfabeticamente.
+ */
+async function loadMaintenanceTypes() {
+    try {
+        const response = await fetch('maintenance_types.json');
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        const data = await response.json();
+        
+        if (Array.isArray(data.types)) {
+            // Ordina in base all'alfabeto italiano (per gestire gli accenti e ordinare correttamente)
+            maintenanceTypes = data.types.sort((a, b) => a.localeCompare(b, 'it', { sensitivity: 'base' }));
+            return maintenanceTypes;
+        } else {
+            console.error("Il formato del file maintenance_types.json non è corretto.");
+            return [];
+        }
+    } catch (error) {
+        console.error("Errore nel recupero o nell'ordinamento dei tipi di manutenzione:", error);
+        // Fallback in caso di errore o file mancante
+        maintenanceTypes = ["Altro", "Controllo", "Collaudo"].sort((a, b) => a.localeCompare(b, 'it', { sensitivity: 'base' }));
+        return maintenanceTypes;
+    }
+}
+
+/**
+ * Popola l'elemento <select> specificato con le opzioni dei tipi di manutenzione.
+ * @param {string} elementId - L'ID dell'elemento <select> ('type' o 'editType').
+ * @param {string|null} selectedValue - Il valore da pre-selezionare.
+ */
+function populateMaintenanceTypeSelect(elementId, selectedValue = null) {
+    const selectEl = document.getElementById(elementId);
+    if (!selectEl) return;
+
+    // Pulisce le opzioni esistenti e aggiunge il placeholder
+    selectEl.innerHTML = '<option value="" disabled selected>Seleziona tipo</option>';
+
+    // Aggiunge le opzioni ordinate
+    maintenanceTypes.forEach(type => {
+        const option = document.createElement('option');
+        option.value = type;
+        option.textContent = type;
+        if (selectedValue === type) {
+            option.selected = true;
+            // Rimuove l'attributo 'selected' dall'opzione 'Seleziona tipo'
+             selectEl.querySelector('option[disabled]').selected = false;
+        }
+        selectEl.appendChild(option);
+    });
+}
+
+
+// ===================================
+// GESTIONE STATO E UTILITY
+// ===================================
+
+let vehicles = [];
+let maintenances = [];
+let alerts = [];
+let notifiedAlerts = new Set();
+let currentVehicle = null; // Usato per modale Aggiungi/Modifica Veicolo e Dettagli
+let currentMaintenance = null; // Usato per modale Modifica Manutenzione
+
+
+function getVehicleById(id) {
+    return vehicles.find(v => v.id === id);
+}
+
+// Format date
+function formatDate(dateString) {
+    if (!dateString) return 'N/D';
+    return new Date(dateString).toLocaleDateString('it-IT');
+}
+
+/**
+ * Controlla lo stato di scadenza di una manutenzione.
+ */
 function checkMaintenanceDue(maintenance, currentKm) {
     const now = new Date();
-    const dueDate = new Date(maintenance.dueDate);
-    const daysUntil = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    const dueDate = maintenance.dueDate ? new Date(maintenance.dueDate) : null;
+    const dueKm = maintenance.dueKm;
+    const notifyDaysBefore = maintenance.notifyDaysBefore || 7;
 
     let isDue = false;
     let reason = '';
     let kmUntil = null;
+    let daysUntil = Infinity;
 
-    // Check date
-    if (daysUntil <= maintenance.notifyDaysBefore && daysUntil > 1) {
-        isDue = true;
-        reason = `Scadenza tra ${daysUntil} giorni`;
-    } else if (daysUntil === 0) {
-        isDue = true;
-        reason = `Scade oggi`;
-    } else if (daysUntil === 1) {
-        isDue = true;
-        reason = `Scade domani`;
-    } else if (daysUntil < 0) {
-        isDue = true;
-        const daysOverdue = Math.abs(daysUntil);
-        reason = `Scaduto da ${daysOverdue} ${daysOverdue === 1 ? ' giorno' : ' giorni'}`;
+    // 1. Check date
+    if (dueDate) {
+        daysUntil = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        if (daysUntil < 0) {
+            isDue = true;
+            const daysOverdue = Math.abs(daysUntil);
+            reason = `Scaduto da ${daysOverdue} ${daysOverdue === 1 ? ' giorno' : ' giorni'}`;
+        } else if (daysUntil <= notifyDaysBefore) {
+            isDue = true;
+            reason = `Scadenza tra ${daysUntil} ${daysUntil === 1 ? ' giorno' : ' giorni'}`;
+        }
     }
 
-    // Check km if applicable
-    if (maintenance.dueKm && currentKm) {
-        kmUntil = maintenance.dueKm - currentKm;
-        // Non notificare per km in anticipo di più di 1000
-        if (kmUntil <= 1000 && kmUntil >= 0) {
+    // 2. Check km
+    if (dueKm && currentKm !== null && currentKm !== undefined) {
+        kmUntil = dueKm - currentKm;
+        // Notifica se mancano meno di 3000km o se è superato
+        if (kmUntil < 0) {
             isDue = true;
-            // Se c'è già una notifica per data, la unisce, altrimenti usa solo i km
-            reason = reason ? `${reason} e ${kmUntil.toLocaleString()} km` : `Mancano ${kmUntil.toLocaleString()} km`;
-        } else if (kmUntil < 0) {
+            const kmOverdue = Math.abs(kmUntil);
+            reason = reason ? `${reason} e superato di ${kmOverdue.toLocaleString()} km` : `Superato di ${kmOverdue.toLocaleString()} km`;
+        } else if (kmUntil <= 3000) {
             isDue = true;
-            reason = reason ? `${reason} e superato di ${Math.abs(kmUntil).toLocaleString()} km` : `Superato di ${Math.abs(kmUntil).toLocaleString()} km`;
+            const kmText = `Mancano ${kmUntil.toLocaleString()} km`;
+            reason = reason ? `${reason} / ${kmText}` : kmText;
         }
     }
 
     return { isDue, daysUntil, kmUntil, reason };
 }
 
+/**
+ * Controlla tutte le manutenzioni per generare la lista di alerts.
+ */
 function checkAllMaintenances(vehicles, maintenances) {
     const alerts = [];
 
@@ -205,7 +279,6 @@ function checkAllMaintenances(vehicles, maintenances) {
         const vehicleMaintenances = maintenances.filter(m => m.vehicleId === vehicle.id);
 
         vehicleMaintenances.forEach(maintenance => {
-            // Skip completed maintenances
             if (maintenance.completed) return;
 
             const check = checkMaintenanceDue(maintenance, vehicle.currentKm);
@@ -223,42 +296,8 @@ function checkAllMaintenances(vehicles, maintenances) {
     return alerts;
 }
 
-function requestNotificationPermission() {
-    if ('Notification' in window) {
-        if (Notification.permission !== 'granted' && Notification.permission !== 'denied') {
-            Notification.requestPermission().then(permission => {
-                if (permission === 'granted') {
-                    console.log('Permesso per le notifiche concesso.');
-                    showBrowserNotification('Notifiche Abilitate', 'Riceverai avvisi per le manutenzioni in scadenza.');
-                } else {
-                    console.log('Permesso per le notifiche negato.');
-                }
-            });
-        }
-        return Notification.permission === 'granted';
-    } else {
-        console.log('Questo browser non supporta le notifiche desktop.');
-        return false;
-    }
-}
 
-function showBrowserNotification(title, body) {
-    if (Notification.permission === 'granted') {
-        new Notification(title, {
-            body: body,
-            icon: 'https://tse1.mm.bing.net/th/id/OIP.kQpL0TADFnsvlZ6ujg16xQHaHa?rs=1&pid=ImgDetMain&o=7&rm=3', // Usa l'icona del tuo progetto
-            badge: 'https://tse1.mm.bing.net/th/id/OIP.kQpL0TADFnsvlZ6ujg16xQHaHa?rs=1&pid=ImgDetMain&o=7&rm=3'
-        });
-    }
-}
-
-// Format date
-function formatDate(dateString) {
-    if (!dateString) return 'N/D';
-    return new Date(dateString).toLocaleDateString('it-IT');
-}
-
-// Theme management (Mantenuto)
+// Gestione Tema
 const THEME_KEY = 'theme';
 
 function getInitialTheme() {
@@ -283,25 +322,58 @@ function updateThemeToggleUI(theme) {
         : '<i class="fas fa-moon"></i><span class="toggle-label">Scuro</span>';
 }
 
-// State management
-let vehicles = [];
-let maintenances = [];
-let alerts = [];
-let notifiedAlerts = new Set();
-let currentVehicle = null;
-let currentMaintenance = null;
+// Gestione Notifiche Browser
+function requestNotificationPermission() {
+    if ('Notification' in window) {
+        if (Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+        return Notification.permission === 'granted';
+    }
+    return false;
+}
 
-// DOM References (Mantenute)
+function showBrowserNotification(title, body) {
+    if (Notification.permission === 'granted') {
+        new Notification(title, {
+            body: body,
+            icon: 'https://tse1.mm.bing.net/th/id/OIP.kQpL0TADFnsvlZ6ujg16xQHaHa?rs=1&pid=ImgDetMain&o=7&rm=3',
+        });
+    }
+}
+
+function checkMaintenancesAndNotify() {
+    // Ricarica i dati per avere gli alert aggiornati
+    loadData().then(() => {
+        if (Notification.permission !== 'granted') return;
+
+        const newNotifiedAlerts = new Set();
+        alerts.forEach(alert => {
+            const alertId = `${alert.vehicle.id}-${alert.maintenance.id}`;
+
+            // Solo se non è stato notificato prima (per non spammare)
+            if (!notifiedAlerts.has(alertId)) {
+                let message = `Veicolo: ${alert.vehicle.brand} ${alert.vehicle.model}, Manutenzione: ${alert.maintenance.type}. ${alert.reason}.`;
+                showBrowserNotification('🚨 Scadenza Manutenzione', message);
+                newNotifiedAlerts.add(alertId);
+            }
+        });
+        notifiedAlerts = newNotifiedAlerts;
+    });
+}
+
+
+// ===================================
+// FUNZIONI DI RENDERING
+// ===================================
+
 const totalVehiclesEl = document.getElementById('totalVehicles');
 const totalVehiclesLabelEl = document.getElementById('totalVehiclesLabel');
 const totalMaintenancesEl = document.getElementById('totalMaintenances');
 const totalMaintenancesLabelEl = document.getElementById('totalMaintenancesLabel');
 const activeAlertsEl = document.getElementById('activeAlerts');
 const activeAlertsLabelEl = document.getElementById('activeAlertsLabel');
-
 const alertsIconEl = document.getElementById('alertsIcon');
-
-
 const alertsSectionEl = document.getElementById('alertsSection');
 const alertsContainerEl = document.getElementById('alertsContainer');
 const vehiclesContainerEl = document.getElementById('vehiclesContainer');
@@ -319,35 +391,17 @@ const formAddVehicleEl = document.getElementById('formAddVehicle');
 const formAddMaintenanceEl = document.getElementById('formAddMaintenance');
 const formEditMaintenanceEl = document.getElementById('formEditMaintenance');
 
-// Buttons
-const btnAddVehicleEl = document.getElementById('btnAddVehicle');
-const btnAddVehicleEmptyEl = document.getElementById('btnAddVehicleEmpty');
-
-// Load data (Aggiornata per usare async/await)
-async function loadData() {
-    // Le funzioni di accesso al DB ora sono async
-    vehicles = await getVehicles();
-    maintenances = await getMaintenances();
-    alerts = checkAllMaintenances(vehicles, maintenances);
-
-    renderStats();
-    renderAlerts();
-    renderVehicles();
-}
-
 function renderStats() {
     totalVehiclesEl.textContent = vehicles.length;
     totalMaintenancesEl.textContent = maintenances.length;
     activeAlertsEl.textContent = alerts.length;
 
-    // Aggiorna le etichette per singolare/plurale
     totalVehiclesLabelEl.textContent = vehicles.length === 1 ? 'Veicolo Totale' : 'Veicoli Totali';
     totalMaintenancesLabelEl.textContent = maintenances.length === 1 ? 'Manutenzione' : 'Manutenzioni';
     activeAlertsLabelEl.textContent = alerts.length === 1 ? 'Scadenza Attiva' : 'Scadenze Attive';
 
-    // Update alerts icon
     if (alerts.length > 0) {
-        alertsIconEl.className = 'stat-icon stat-icon-red pulse-animation'; // Aggiunge l'animazione se definita in CSS
+        alertsIconEl.className = 'stat-icon stat-icon-red pulse-animation';
         alertsIconEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
     } else {
         alertsIconEl.className = 'stat-icon stat-icon-gray';
@@ -355,9 +409,6 @@ function renderStats() {
     }
 }
 
-/**
- * Renderizza gli avvisi di manutenzione in scadenza nell'interfaccia.
- */
 function renderAlerts() {
     if (alerts.length === 0) {
         alertsSectionEl.style.display = 'none';
@@ -365,27 +416,20 @@ function renderAlerts() {
     }
 
     alertsSectionEl.style.display = 'block';
-    alertsContainerEl.innerHTML = ''; // Pulisce il contenitore
+    alertsContainerEl.innerHTML = '';
 
-    // Ordina gli alert per data di scadenza (più vicina prima)
+    // Ordina: Scaduti prima, poi quelli in arrivo (dal più vicino)
     alerts.sort((a, b) => {
-        // Prioritizza gli alert che sono già in scadenza (negativi)
-        if (a.daysUntil < 0 && b.daysUntil >= 0) return -1;
-        if (a.daysUntil >= 0 && b.daysUntil < 0) return 1;
-        // Altrimenti, ordina per giorni mancanti (crescente)
+        // Usa daysUntil come metrica principale
         return a.daysUntil - b.daysUntil;
     });
 
     alerts.forEach(alert => {
         const alertMessage = document.createElement('div');
         alertMessage.className = 'alert-message warning';
-        alertMessage.onclick = () => handleViewDetails(alert.vehicle.id); // Rende l'alert cliccabile
+        alertMessage.onclick = () => handleViewDetails(alert.vehicle.id);
 
-        const formattedDate = new Date(alert.maintenance.dueDate).toLocaleDateString('it-IT', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
+        const formattedDate = alert.maintenance.dueDate ? new Date(alert.maintenance.dueDate).toLocaleDateString('it-IT', { year: 'numeric', month: 'long', day: 'numeric' }) : 'N/D';
 
         alertMessage.innerHTML = `
             <div class="alert-icon">
@@ -410,20 +454,21 @@ function renderVehicles() {
     vehiclesContainerEl.innerHTML = '';
 
     if (vehicles.length === 0) {
-        emptyStateEl.style.display = 'none'; // Rimosso il blocco del fix precedente che era sbagliato, mantenendo la logica originale se c'è
+        emptyStateEl.style.display = 'flex'; // Usare flex per centrare
+        vehiclesContainerEl.style.display = 'none';
         return;
     }
 
     emptyStateEl.style.display = 'none';
+    vehiclesContainerEl.style.display = 'grid'; // Assumendo grid dal CSS
 
-    vehicles.forEach((vehicle, index) => {
+    vehicles.forEach((vehicle) => {
         const vehicleMaintenances = maintenances.filter(m => m.vehicleId === vehicle.id);
         const maintenanceText = vehicleMaintenances.length === 1 ? 'manutenzione' : 'manutenzioni';
 
         const vehicleCard = document.createElement('div');
         vehicleCard.className = 'vehicle-card';
 
-        // LOGICA AGGIORNATA PER PULSANTI DETTAGLI/ELIMINA NELL'HEADER (ICONI TOUCH FRIENDLY)
         vehicleCard.innerHTML = `
             <div class="vehicle-card-header">
                 <div class="vehicle-card-info">
@@ -469,53 +514,8 @@ function renderVehicles() {
     });
 }
 
-// Event handlers
-async function handleDeleteVehicle(vehicleId) { // RESA ASYNC
-    showConfirmDialog(
-        'Conferma Eliminazione Veicolo',
-        'Sei sicuro di voler eliminare questo veicolo? Verranno eliminate anche tutte le manutenzioni associate.',
-        async () => {
-            const success = await deleteVehicle(vehicleId); // Chiamata async all'API
-            if (success) {
-                await loadData(); // Ricarica dati
-                // Chiude il modale dei dettagli se aperto
-                dialogVehicleDetailsEl.classList.remove('show');
-                currentVehicle = null;
-            }
-        }
-    );
-}
-
-// Funzioni di supporto per Dialog (Mantenute)
-function showConfirmDialog(title, message, onConfirm) {
-    document.getElementById('confirmDialogTitle').textContent = title;
-    document.getElementById('confirmDialogMessage').innerHTML = message; // Usa innerHTML per supportare il grassetto
-    dialogConfirmEl.classList.add('show');
-
-    // Clona e sostituisce il listener per evitare problemi di async/multiple calls
-    const oldBtn = document.getElementById('btnConfirmAction');
-    const newBtn = oldBtn.cloneNode(true);
-    oldBtn.parentNode.replaceChild(newBtn, oldBtn);
-    newBtn.style.display = 'inline-flex'; // Assicura che sia visibile
-    document.getElementById('btnCancelConfirm').textContent = 'Annulla';
-
-    newBtn.onclick = () => {
-        onConfirm();
-        dialogConfirmEl.classList.remove('show');
-    };
-}
-
-function showAlertDialog(title, message) {
-    document.getElementById('confirmDialogTitle').textContent = title;
-    document.getElementById('confirmDialogMessage').textContent = message;
-    document.getElementById('btnConfirmAction').style.display = 'none'; // Nasconde il pulsante di conferma
-    document.getElementById('btnCancelConfirm').textContent = 'OK'; // Rinomina Annulla in OK
-    dialogConfirmEl.classList.add('show');
-}
-
-
 function handleViewDetails(vehicleId) {
-    const vehicle = vehicles.find(v => v.id === vehicleId);
+    const vehicle = getVehicleById(vehicleId);
     if (!vehicle) return;
     currentVehicle = vehicle;
     const vehicleMaintenances = maintenances.filter(m => m.vehicleId === vehicleId);
@@ -527,71 +527,61 @@ function handleViewDetails(vehicleId) {
 
     // Render maintenances
     const maintenancesListEl = document.getElementById('maintenancesList');
+    
+    // Ordina: Scaduti/In Scadenza (non completati) > Non in scadenza (non completati) > Completati (dal più recente)
+    vehicleMaintenances.sort((a, b) => {
+        if (a.completed && !b.completed) return 1;
+        if (!a.completed && b.completed) return -1;
+        if (a.completed && b.completed) {
+            return new Date(b.completedAt) - new Date(a.completedAt); 
+        }
+        // Per i non completati, usa i giorni alla scadenza (meno giorni = più priorità)
+        const checkA = checkMaintenanceDue(a, vehicle.currentKm);
+        const checkB = checkMaintenanceDue(b, vehicle.currentKm);
+        return checkA.daysUntil - checkB.daysUntil;
+    });
+
+
     if (vehicleMaintenances.length === 0) {
         maintenancesListEl.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 1rem 0;">Nessuna manutenzione aggiunta per questo veicolo.</p>';
-        document.getElementById('maintenanceCount').textContent = '(0)'; // FIX: Aggiunto fallback per maintenanceCount
+        document.getElementById('maintenanceCount').textContent = '(0)'; 
     } else {
         const completedCount = vehicleMaintenances.filter(m => m.completed).length;
-        document.getElementById('maintenanceCount').textContent = `(${vehicleMaintenances.length} - ${completedCount} completate)`;
-
-        // Ordina le manutenzioni: In scadenza, in arrivo, completate, passate
-        vehicleMaintenances.sort((a, b) => {
-            if (a.completed && !b.completed) return 1;
-            if (!a.completed && b.completed) return -1;
-            if (a.completed && b.completed) {
-                return new Date(b.completedAt) - new Date(a.completedAt); // Più recenti in alto
-            }
-
-            // Per le non completate, ordina per data di scadenza
-            const checkA = checkMaintenanceDue(a, vehicle.currentKm);
-            const checkB = checkMaintenanceDue(b, vehicle.currentKm);
-
-            // Alert in scadenza/scaduti hanno priorità (negativi/vicini a zero)
-            return checkA.daysUntil - checkB.daysUntil;
-        });
+        document.getElementById('maintenanceCount').textContent = `(${vehicleMaintenances.length} totali - ${completedCount} completate)`;
 
         maintenancesListEl.innerHTML = '';
         vehicleMaintenances.forEach(maintenance => {
             const maintenanceItem = document.createElement('div');
             let isOverdue = false;
             let kmText = '';
-            let dateText = formatDate(maintenance.dueDate);
+            let dateText = maintenance.dueDate ? formatDate(maintenance.dueDate) : 'N/D';
             let statusClass = maintenance.completed ? 'maintenance-completed' : '';
 
             if (!maintenance.completed) {
                 const check = checkMaintenanceDue(maintenance, vehicle.currentKm);
 
-                // Imposta la classe di stato
-                if (check.daysUntil < 0) {
+                if (check.daysUntil < 0 || (check.kmUntil !== null && check.kmUntil < 0)) {
                     statusClass = 'maintenance-overdue';
-                    dateText = `${dateText} (Scaduto)`;
                     isOverdue = true;
-                } else if (check.daysUntil <= maintenance.notifyDaysBefore) {
+                } else if (check.isDue) {
                     statusClass = 'maintenance-due-soon';
-                    dateText = `${dateText} (${check.reason.split('e')[0].trim()})`;
                 }
 
-                // Aggiunge la distanza in Km se rilevante
                 if (maintenance.dueKm) {
-                    kmText = maintenance.dueKm.toLocaleString() + ' km';
-                    if (check.kmUntil !== null) {
-                        const kmStatusClass = check.kmUntil < 0 ? 'text-overdue' : (check.kmUntil <= 1000 ? 'text-due-soon' : 'text-normal');
-                        const kmStatusText = check.kmUntil < 0
-                            ? ` (${Math.abs(check.kmUntil).toLocaleString()} km superati)`
-                            : (check.kmUntil <= 1000
-                                ? ` (Mancano ${check.kmUntil.toLocaleString()} km)`
-                                : '');
-                        kmText = `${kmText}<span class="${kmStatusClass}" style="font-weight: 500">${kmStatusText}</span>`;
+                    if (check.kmUntil === null || check.kmUntil === Infinity) {
+                        kmText = `${maintenance.dueKm.toLocaleString()} km`;
+                    } else if (check.kmUntil < 0) {
+                        kmText = `Superato di ${Math.abs(check.kmUntil).toLocaleString()} km`;
+                    } else {
+                        kmText = `Mancano ${check.kmUntil.toLocaleString()} km`;
                     }
                 }
             } else {
-                statusClass = 'maintenance-completed';
-                // Mostra la data di scadenza originale e la data di completamento
-                dateText = `${formatDate(maintenance.dueDate)} (Scad.)`;
+                dateText = `Completata il ${formatDate(maintenance.completedAt)}`;
             }
 
-            maintenanceItem.className = `maintenance-item ${statusClass}`;
 
+            maintenanceItem.className = `maintenance-item ${statusClass}`;
             maintenanceItem.innerHTML = `
                 <div class="maintenance-icon">
                     <i class="fas fa-tools"></i>
@@ -604,26 +594,19 @@ function handleViewDetails(vehicleId) {
                             <span class="${isOverdue ? 'text-overdue' : 'text-normal'}">${dateText}</span>
                         </div>
                         ${maintenance.dueKm ? `
-                            <div class="maintenance-detail-item">
-                                <i class="fas fa-tachometer-alt"></i>
-                                <span>${kmText}</span>
-                            </div>
+                        <div class="maintenance-detail-item">
+                            <i class="fas fa-tachometer-alt"></i>
+                            <span>${kmText}</span>
+                        </div>
                         ` : ''}
                     </div>
-                    ${maintenance.notes ? `<p class="maintenance-notes" style="color: var(--text-secondary)">${maintenance.notes}</p>` : ''}
-                    ${maintenance.completed && maintenance.completedAt ? `
-                        <p class="maintenance-completed-date">Completata il ${formatDate(maintenance.completedAt)}</p>
-                    ` : ''}
+                    ${maintenance.notes ? `<p class="maintenance-notes" style="color: var(--text-secondary)">Note: ${maintenance.notes}</p>` : ''}
                 </div>
                 <div class="maintenance-actions">
-                    <button class="btn-icon ${maintenance.completed ? 'btn-success' : 'btn-secondary'}" 
-                            onclick="event.stopPropagation(); handleToggleComplete('${maintenance.id}', ${!maintenance.completed})" 
-                            aria-label="${maintenance.completed ? 'Segna come non completata' : 'Segna come completata'}">
+                    <button class="btn-icon ${maintenance.completed ? 'btn-success' : 'btn-secondary'}" onclick="event.stopPropagation(); handleToggleComplete('${maintenance.id}', ${!maintenance.completed})" aria-label="${maintenance.completed ? 'Segna come non completata' : 'Segna come completata'}">
                         <i class="fas ${maintenance.completed ? 'fa-check-square' : 'fa-square'}"></i>
                     </button>
-                    <button class="btn-icon btn-secondary" 
-                            onclick="event.stopPropagation(); handleEditMaintenance('${maintenance.id}')" 
-                            aria-label="Modifica Manutenzione">
+                    <button class="btn-icon btn-secondary" onclick="event.stopPropagation(); handleEditMaintenance('${maintenance.id}')" aria-label="Modifica Manutenzione">
                         <i class="fas fa-pencil-alt"></i>
                     </button>
                     <button class="btn-icon btn-danger" onclick="event.stopPropagation(); handleDeleteMaintenance('${maintenance.id}')" aria-label="Elimina Manutenzione">
@@ -635,112 +618,168 @@ function handleViewDetails(vehicleId) {
         });
     }
 
-
     dialogVehicleDetailsEl.classList.add('show');
 }
 
-function handleAddMaintenance(vehicleId) {
-    const vehicle = vehicles.find(v => v.id === vehicleId);
-    if (!vehicle) return;
-    currentVehicle = vehicle;
-    document.getElementById('maintenanceVehicleInfo').textContent = `${vehicle.brand} ${vehicle.model} - ${vehicle.plate}`;
-    // Reset form
-    formAddMaintenanceEl.reset();
-    document.getElementById('notifyDaysBefore').value = '7';
-    // ATTENZIONE: Rimosso blocco data minima (permettere date passate)
-    // ESEMPIO: document.getElementById('dueDate').min = new Date().toISOString().split('T')[0];
-    dialogAddMaintenanceEl.classList.add('show');
+// Funzioni di supporto per Dialog
+function showConfirmDialog(title, message, onConfirm) {
+    document.getElementById('confirmDialogTitle').textContent = title;
+    document.getElementById('confirmDialogMessage').textContent = message;
+    
+    const oldBtn = document.getElementById('btnConfirmAction');
+    const newBtn = oldBtn.cloneNode(true);
+    oldBtn.parentNode.replaceChild(newBtn, oldBtn);
+    newBtn.style.display = 'inline-block';
+    document.getElementById('btnCancelConfirm').textContent = 'Annulla';
+
+    newBtn.addEventListener('click', () => {
+        onConfirm();
+        dialogConfirmEl.classList.remove('show');
+    }, { once: true });
+    
+    dialogConfirmEl.classList.add('show');
 }
 
-function handleEditVehicle(vehicleId) {
-    const vehicle = vehicles.find(v => v.id === vehicleId);
-    if (!vehicle) return;
+function showAlertDialog(title, message) {
+    document.getElementById('confirmDialogTitle').textContent = title;
+    document.getElementById('confirmDialogMessage').textContent = message;
+    
+    document.getElementById('btnConfirmAction').style.display = 'none'; 
+    document.getElementById('btnCancelConfirm').textContent = 'OK'; 
 
-    currentVehicle = vehicle;
+    const oldBtn = document.getElementById('btnCancelConfirm');
+    const newBtn = oldBtn.cloneNode(true);
+    oldBtn.parentNode.replaceChild(newBtn, oldBtn);
+
+    newBtn.addEventListener('click', () => {
+        dialogConfirmEl.classList.remove('show');
+        document.getElementById('btnConfirmAction').style.display = 'inline-block'; 
+        newBtn.textContent = 'Annulla'; 
+    }, { once: true });
+
+    dialogConfirmEl.classList.add('show');
+}
+
+
+// ===================================
+// GESTIONE EVENTI (HANDLERS)
+// ===================================
+
+function handleEditVehicle(vehicleId) {
+    const vehicle = getVehicleById(vehicleId);
+    if (!vehicle) return;
+    currentVehicle = vehicle; // Usa currentVehicle per tracciare il veicolo in modifica
+    
     document.getElementById('dialogAddVehicleTitle').textContent = 'Modifica Veicolo';
     document.getElementById('brand').value = vehicle.brand;
     document.getElementById('model').value = vehicle.model;
     document.getElementById('plate').value = vehicle.plate;
     document.getElementById('year').value = vehicle.year;
-    document.getElementById('currentKm').value = vehicle.currentKm || 0; // Pre-popola con 0 se è null
+    document.getElementById('currentKm').value = vehicle.currentKm;
 
-    // Chiude il dialog dei dettagli se era aperto
-    dialogVehicleDetailsEl.classList.remove('show');
     dialogAddVehicleEl.classList.add('show');
 }
 
-function handleEditMaintenance(maintenanceId) {
-    const maintenance = maintenances.find(m => m.id === maintenanceId);
-    if (!maintenance) return;
-    currentMaintenance = maintenance;
-
-    // Populate form
-    document.getElementById('editType').value = maintenance.type;
-    // La data deve essere nel formato YYYY-MM-DD per l'input type="date"
-    document.getElementById('editDueDate').value = maintenance.dueDate ? new Date(maintenance.dueDate).toISOString().split('T')[0] : '';
-    document.getElementById('editDueKm').value = maintenance.dueKm || '';
-    document.getElementById('editNotifyDaysBefore').value = maintenance.notifyDaysBefore || 7;
-    document.getElementById('editNotes').value = maintenance.notes || '';
-
-    // NUOVO: Popola lo stato di completamento
-    document.getElementById('editCompleted').checked = maintenance.completed;
-
-    // ATTENZIONE: Rimosso blocco data minima (permettere date passate)
-    // ESEMPIO: document.getElementById('editDueDate').min = new Date().toISOString().split('T')[0];
-
-    // Chiude il dialog dei dettagli se era aperto
-    dialogVehicleDetailsEl.classList.remove('show');
-    dialogEditMaintenanceEl.classList.add('show');
-}
-
-async function handleDeleteMaintenance(maintenanceId) { // RESA ASYNC
+async function handleDeleteVehicle(vehicleId) {
+    const vehicle = getVehicleById(vehicleId);
+    if (!vehicle) return;
     showConfirmDialog(
-        'Conferma Eliminazione Manutenzione',
-        'Sei sicuro di voler eliminare questa manutenzione?',
+        'Conferma Eliminazione Veicolo',
+        `Sei sicuro di voler eliminare il veicolo "${vehicle.brand} ${vehicle.model}" e tutte le sue manutenzioni?`,
         async () => {
-            const success = await deleteMaintenance(maintenanceId); // Chiamata async all'API
+            const success = await deleteVehicle(vehicleId);
             if (success) {
-                await loadData(); // Ricarica dati
-                if (currentVehicle) {
-                    // Riapri i dettagli del veicolo per mostrare la lista aggiornata
-                    handleViewDetails(currentVehicle.id);
-                }
+                await loadData();
+                dialogVehicleDetailsEl.classList.remove('show');
+                currentVehicle = null;
             }
         }
     );
 }
 
-// Funzione per gestire il cambio di stato di completamento (sostituisce handleMarkComplete)
+function handleAddMaintenance(vehicleId) {
+    const vehicle = getVehicleById(vehicleId);
+    if (!vehicle) return;
+    currentVehicle = vehicle;
+    document.getElementById('maintenanceVehicleInfo').textContent = `${vehicle.brand} ${vehicle.model} - ${vehicle.plate}`;
+    
+    formAddMaintenanceEl.reset();
+    document.getElementById('notifyDaysBefore').value = '7'; 
+    
+    // NUOVO: Popola il select con i tipi ordinati
+    populateMaintenanceTypeSelect('type'); 
+
+    dialogAddMaintenanceEl.classList.add('show');
+}
+
+function handleEditMaintenance(maintenanceId) { 
+    const maintenance = maintenances.find(m => m.id === maintenanceId);
+    if (!maintenance) return; 
+
+    // Trova il veicolo associato per popolare il sottotitolo
+    const vehicle = getVehicleById(maintenance.vehicleId);
+    if (!vehicle) return;
+
+    currentMaintenance = maintenance;
+    currentVehicle = vehicle; // Imposta currentVehicle per il back-navigate al Dettagli
+
+    // Imposta le info nel modale
+    document.getElementById('editMaintenanceTitle').textContent = `Modifica Manutenzione: ${maintenance.type}`;
+    document.getElementById('editMaintenanceVehicleInfo').textContent = `${vehicle.brand} ${vehicle.model} - ${vehicle.plate}`;
+    
+    // NUOVO: Popola il select con l'opzione corretta preselezionata
+    populateMaintenanceTypeSelect('editType', maintenance.type);
+
+    document.getElementById('editDueDate').value = maintenance.dueDate || '';
+    document.getElementById('editDueKm').value = maintenance.dueKm || '';
+    document.getElementById('editNotifyDaysBefore').value = maintenance.notifyDaysBefore || '7';
+    document.getElementById('editNotes').value = maintenance.notes || '';
+    document.getElementById('editCompleted').checked = maintenance.completed;
+
+    dialogEditMaintenanceEl.classList.add('show');
+}
+
+async function handleDeleteMaintenance(maintenanceId) {
+    const maintenance = maintenances.find(m => m.id === maintenanceId);
+    if (!maintenance || !currentVehicle) return;
+
+    showConfirmDialog(
+        'Conferma Eliminazione Manutenzione',
+        `Sei sicuro di voler eliminare la manutenzione "${maintenance.type}"?`,
+        async () => {
+            const success = await deleteMaintenance(maintenanceId);
+            if (success) {
+                await loadData();
+                handleViewDetails(currentVehicle.id);
+            }
+        }
+    );
+}
+
 async function handleToggleComplete(maintenanceId, newCompletedStatus) {
     const maintenance = maintenances.find(m => m.id === maintenanceId);
     if (!maintenance) return;
 
-    // Rimosso il dialog di conferma per rendere l'aggiornamento immediato ("non elimina ma ok")
     const updatedMaintenance = {
         ...maintenance,
         completed: newCompletedStatus,
-        // Aggiorna completedAt solo se è segnata come completata O se non era mai stata completata prima
         completedAt: newCompletedStatus ? (maintenance.completedAt || new Date().toISOString()) : null
     };
 
     const savedMaintenance = await saveMaintenance(updatedMaintenance);
-
     if (savedMaintenance) {
         await loadData();
-        // Se siamo nella vista dettagli, ricaricala
+
         if (currentVehicle && currentVehicle.id === savedMaintenance.vehicleId) {
             handleViewDetails(currentVehicle.id);
         }
     }
 }
 
-
-// Funzione per aggiornare i Km
 async function handleUpdateKm() {
     if (!currentVehicle) return;
-
     const newKm = parseInt(document.getElementById('updateKm').value);
-
+    
     if (isNaN(newKm) || newKm < 0) {
         showAlertDialog('Errore', 'Inserisci un valore valido per i Km.');
         return;
@@ -751,11 +790,10 @@ async function handleUpdateKm() {
         return;
     }
 
-    // Crea un oggetto veicolo aggiornato
     const updatedVehicle = {
         ...currentVehicle,
         currentKm: newKm,
-        // Questi campi sono inclusi per la chiamata PUT del backend, anche se non modificati
+        // Includi tutti i campi obbligatori per la PUT
         brand: currentVehicle.brand,
         model: currentVehicle.model,
         plate: currentVehicle.plate,
@@ -763,173 +801,136 @@ async function handleUpdateKm() {
     };
 
     const savedVehicle = await saveVehicle(updatedVehicle);
-
     if (savedVehicle) {
-        // Aggiorna lo stato in memoria e l'UI
         currentVehicle = savedVehicle;
         await loadData();
-        handleViewDetails(currentVehicle.id); // Ricarica la vista dettagli con i nuovi dati
+        handleViewDetails(currentVehicle.id);
     }
 }
 
 
-// Funzione per notificare
-function checkMaintenancesAndNotify() {
-    // Chiamiamo loadData per ricaricare gli alert dal DB
-    loadData().then(() => {
-        if (Notification.permission !== 'granted') return;
+// ===================================
+// INIZIALIZZAZIONE E GESTORI DI EVENTI GLOBALI
+// ===================================
 
-        const newNotifiedAlerts = new Set();
-        alerts.forEach(alert => {
-            const alertId = `${alert.vehicle.id}-${alert.maintenance.id}`;
+async function loadData() {
+    // 1. Carica e ordina i tipi di manutenzione (NUOVO)
+    await loadMaintenanceTypes(); 
+    
+    // 2. Carica veicoli e manutenzioni
+    vehicles = await getVehicles();
+    maintenances = await getMaintenances();
+    alerts = checkAllMaintenances(vehicles, maintenances);
 
-            // Solo se non è stato notificato prima
-            if (!notifiedAlerts.has(alertId)) {
-                showBrowserNotification(
-                    `❗ ${alert.vehicle.brand} ${alert.vehicle.model}`,
-                    `${alert.maintenance.type} - ${alert.reason}`
-                );
-                newNotifiedAlerts.add(alertId); // Aggiungiamo l'ID al set per non notificarlo di nuovo
-            }
-        });
-        notifiedAlerts = newNotifiedAlerts;
-    });
+    // 3. Render
+    renderStats();
+    renderAlerts();
+    renderVehicles();
 }
 
+// Inizializzazione all'apertura della pagina
+window.onload = () => {
+    setTheme(getInitialTheme());
+    requestNotificationPermission();
+    loadData();
 
-// Handlers per la chiusura dei dialog
-function setupDialogCloseHandlers() {
-    // Buttons (Mantenuti e aggiornati per async)
-    btnAddVehicleEl.addEventListener('click', () => {
+    // Check every 5 minutes 
+    setInterval(checkMaintenancesAndNotify, 5 * 60 * 1000); 
+
+    // Toggle Tema
+    document.getElementById('themeToggle').addEventListener('click', () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        setTheme(newTheme);
+    });
+
+    // Apertura Modali Veicolo
+    document.getElementById('btnAddVehicle').addEventListener('click', () => {
+        currentVehicle = null;
+        formAddVehicleEl.reset();
+        document.getElementById('dialogAddVehicleTitle').textContent = 'Aggiungi Nuovo Veicolo';
+        dialogAddVehicleEl.classList.add('show');
+    });
+    document.getElementById('btnAddVehicleEmpty').addEventListener('click', () => {
         currentVehicle = null;
         formAddVehicleEl.reset();
         document.getElementById('dialogAddVehicleTitle').textContent = 'Aggiungi Nuovo Veicolo';
         dialogAddVehicleEl.classList.add('show');
     });
 
-    btnAddVehicleEmptyEl.addEventListener('click', () => {
-        currentVehicle = null;
-        formAddVehicleEl.reset();
-        document.getElementById('dialogAddVehicleTitle').textContent = 'Aggiungi Nuovo Veicolo';
-        dialogAddVehicleEl.classList.add('show');
-    });
-
-    document.getElementById('btnCancelAddVehicle').addEventListener('click', () => {
-        const wasEditing = !!currentVehicle;
-        const vehicleIdToRestore = wasEditing ? currentVehicle.id : null;
-        dialogAddVehicleEl.classList.remove('show');
-        currentVehicle = null;
-
-        if (wasEditing && vehicleIdToRestore) {
-            setTimeout(() => {
-                handleViewDetails(vehicleIdToRestore);
-            }, 100);
-        }
-    });
-
-    document.getElementById('btnCancelAddMaintenance').addEventListener('click', () => {
-        dialogAddMaintenanceEl.classList.remove('show');
-        if (currentVehicle) {
-            setTimeout(() => {
-                handleViewDetails(currentVehicle.id);
-            }, 100);
-        }
-    });
-
-    document.getElementById('btnCancelEditMaintenance').addEventListener('click', () => {
-        dialogEditMaintenanceEl.classList.remove('show');
-        if (currentVehicle) {
-            setTimeout(() => {
-                handleViewDetails(currentVehicle.id);
-            }, 100);
-        }
-    });
-
-    document.getElementById('btnCancelConfirm').addEventListener('click', () => {
-        dialogConfirmEl.classList.remove('show');
-    });
-
+    // Chiusura Modali
+    document.getElementById('btnCancelAddVehicle').addEventListener('click', () => dialogAddVehicleEl.classList.remove('show'));
+    document.getElementById('btnCancelAddMaintenance').addEventListener('click', () => dialogAddMaintenanceEl.classList.remove('show'));
+    document.getElementById('btnCancelEditMaintenance').addEventListener('click', () => dialogEditMaintenanceEl.classList.remove('show'));
     document.getElementById('btnCloseDetails').addEventListener('click', () => {
         dialogVehicleDetailsEl.classList.remove('show');
         currentVehicle = null;
     });
 
+    // Azioni in Dettagli Veicolo
     document.getElementById('btnEditVehicleFromDetails').addEventListener('click', () => {
         if (!currentVehicle) return;
         dialogVehicleDetailsEl.classList.remove('show');
-        setTimeout(() => {
-            handleEditVehicle(currentVehicle.id);
-        }, 200);
+        setTimeout(() => handleEditVehicle(currentVehicle.id), 200);
     });
 
     document.getElementById('btnAddMaintenanceFromDetails').addEventListener('click', () => {
         if (!currentVehicle) return;
         dialogVehicleDetailsEl.classList.remove('show');
-        setTimeout(() => {
-            handleAddMaintenance(currentVehicle.id);
-        }, 200);
+        setTimeout(() => handleAddMaintenance(currentVehicle.id), 200);
     });
-
+    
     document.getElementById('btnUpdateKm').addEventListener('click', handleUpdateKm);
+    document.getElementById('btnCancelConfirm').addEventListener('click', () => dialogConfirmEl.classList.remove('show'));
 
-    // Form submissions (Aggiornate per async/await)
+
+    // SUBMIT: Aggiungi/Modifica Veicolo
     formAddVehicleEl.addEventListener('submit', async (e) => {
         e.preventDefault();
+        
         const vehicle = {
-            id: currentVehicle ? currentVehicle.id : null, // Se in modifica, altrimenti null
+            id: currentVehicle ? currentVehicle.id : null, 
             brand: document.getElementById('brand').value.trim(),
             model: document.getElementById('model').value.trim(),
             plate: document.getElementById('plate').value.trim().toUpperCase(),
             year: parseInt(document.getElementById('year').value),
-            currentKm: document.getElementById('currentKm').value ? parseInt(document.getElementById('currentKm').value) : 0,
+            currentKm: parseInt(document.getElementById('currentKm').value) || 0,
         };
 
-        if (!vehicle.brand || !vehicle.model || !vehicle.plate || isNaN(vehicle.year)) {
-            showAlertDialog('Errore', 'Compila tutti i campi obbligatori (Marca, Modello, Targa, Anno).');
+        if (vehicle.plate.length === 0 || vehicle.brand.length === 0 || vehicle.model.length === 0) {
+            showAlertDialog('Errore', 'Marca, Modello e Targa sono obbligatori.');
             return;
         }
-
-        const wasEditing = !!currentVehicle;
 
         const savedVehicle = await saveVehicle(vehicle);
 
-        if (!savedVehicle) return;
-
-        currentVehicle = savedVehicle;
-        await loadData();
-        dialogAddVehicleEl.classList.remove('show');
-
-        // Se in modifica, riapre il modale dei dettagli con i dati aggiornati
-        if (wasEditing && savedVehicle.id) {
-            setTimeout(() => {
-                handleViewDetails(savedVehicle.id);
-            }, 100);
+        if (savedVehicle) {
+            dialogAddVehicleEl.classList.remove('show');
+            await loadData();
         }
     });
-
+    
+    // SUBMIT: Aggiungi Manutenzione
     formAddMaintenanceEl.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const vehicleId = currentVehicle ? currentVehicle.id : null;
-
-        if (!vehicleId) {
-            showAlertDialog('Errore', 'Veicolo non selezionato per la manutenzione.');
-            return;
-        }
+        
+        if (!currentVehicle) return;
 
         const dueDate = document.getElementById('dueDate').value;
-        if (!dueDate) {
-            showAlertDialog('Errore', 'La data di scadenza è obbligatoria.');
+        const dueKm = document.getElementById('dueKm').value;
+
+        if (!dueDate && !dueKm) {
+            showAlertDialog('Errore', 'Devi specificare almeno una data di scadenza o un chilometraggio di scadenza.');
             return;
         }
-
+        
         const maintenance = {
-            vehicleId: vehicleId,
+            vehicleId: currentVehicle.id,
             type: document.getElementById('type').value.trim(),
             dueDate: dueDate,
             dueKm: document.getElementById('dueKm').value ? parseInt(document.getElementById('dueKm').value) : null,
             notifyDaysBefore: parseInt(document.getElementById('notifyDaysBefore').value) || 7,
             notes: document.getElementById('notes').value.trim(),
-            completed: false
         };
 
         if (!maintenance.type) {
@@ -937,32 +938,30 @@ function setupDialogCloseHandlers() {
             return;
         }
 
-
         const savedMaintenance = await saveMaintenance(maintenance);
 
-        if (!savedMaintenance) return;
-
-        await loadData();
-        dialogAddMaintenanceEl.classList.remove('show');
-
-        // Riapri i dettagli del veicolo per mostrare la lista aggiornata
-        setTimeout(() => {
-            handleViewDetails(vehicleId);
-        }, 100);
+        if (savedMaintenance) {
+            dialogAddMaintenanceEl.classList.remove('show');
+            await loadData();
+            handleViewDetails(currentVehicle.id);
+        }
     });
 
+    // SUBMIT: Modifica Manutenzione
     formEditMaintenanceEl.addEventListener('submit', async (e) => {
         e.preventDefault();
 
+        if (!currentMaintenance || !currentVehicle) return;
+        
         const dueDate = document.getElementById('editDueDate').value;
-        if (!dueDate) {
-            showAlertDialog('Errore', 'La data di scadenza è obbligatoria.');
+        const dueKm = document.getElementById('editDueKm').value;
+
+        if (!dueDate && !dueKm) {
+            showAlertDialog('Errore', 'Devi specificare almeno una data di scadenza o un chilometraggio di scadenza.');
             return;
         }
-
-        // NUOVO: Legge lo stato di completamento dal checkbox
+        
         const isCompleted = document.getElementById('editCompleted').checked;
-
 
         const maintenance = {
             ...currentMaintenance, // Mantiene l'id e vehicleId
@@ -971,12 +970,8 @@ function setupDialogCloseHandlers() {
             dueKm: document.getElementById('editDueKm').value ? parseInt(document.getElementById('editDueKm').value) : null,
             notifyDaysBefore: parseInt(document.getElementById('editNotifyDaysBefore').value) || 7,
             notes: document.getElementById('editNotes').value.trim(),
-
-            // NUOVO: Imposta lo stato di completamento e la data di completamento
             completed: isCompleted,
-            completedAt: isCompleted
-                ? (currentMaintenance.completedAt || new Date().toISOString())
-                : null
+            completedAt: isCompleted ? (currentMaintenance.completedAt || new Date().toISOString()) : null
         };
 
         if (!maintenance.type) {
@@ -986,74 +981,10 @@ function setupDialogCloseHandlers() {
 
         const savedMaintenance = await saveMaintenance(maintenance);
 
-        if (!savedMaintenance) return;
-
-        await loadData();
-        dialogEditMaintenanceEl.classList.remove('show');
-
-        // Riapri i dettagli del veicolo per mostrare la lista aggiornata
-        if (currentVehicle) {
-            setTimeout(() => {
-                handleViewDetails(currentVehicle.id);
-            }, 100);
+        if (savedMaintenance) {
+            dialogEditMaintenanceEl.classList.remove('show');
+            await loadData();
+            handleViewDetails(currentVehicle.id);
         }
     });
-}
-
-// Initialize app
-setupDialogCloseHandlers();
-requestNotificationPermission();
-
-// Theme init
-const initialTheme = getInitialTheme();
-setTheme(initialTheme);
-
-// Theme toggle handler
-const themeToggleBtn = document.getElementById('themeToggle');
-if (themeToggleBtn) {
-    themeToggleBtn.addEventListener('click', () => {
-        const current = localStorage.getItem(THEME_KEY) || initialTheme;
-        const next = current === 'dark' ? 'light' : 'dark';
-        setTheme(next);
-    });
-}
-
-// Inizializza la prima volta
-loadData();
-
-// Check every 5 minutes 
-setInterval(checkMaintenancesAndNotify, 5 * 60 * 1000);
-
-async function loadVehicles() {
-    try {
-        const response = await fetch('/api/vehicles');
-        const vehicles = await response.json();
-
-        const vehicleListContainer = document.getElementById('vehicle-list');
-        const emptyStateMessage = document.getElementById('empty-state'); // Assumendo esista un div per lo stato vuoto
-
-        if (vehicles.length === 0) {
-            // 1. Nascondi la lista (se visibile)
-            vehicleListContainer.innerHTML = '';
-
-            // 2. Mostra lo stato vuoto con il messaggio descrittivo e il pulsante
-            if (emptyStateMessage) {
-                emptyStateMessage.style.display = 'block';
-                // Aggiungi il tuo HTML/Descrizione/Pulsante qui, se non è già nell'HTML
-                // Esempio: emptyStateMessage.innerHTML = '<h2>Nessun Veicolo</h2><p>Aggiungi il tuo primo veicolo per iniziare.</p><button onclick="openAddVehicleModal()">Aggiungi Veicolo</button>';
-            }
-
-        } else {
-            // 1. Nascondi lo stato vuoto (se visibile)
-            if (emptyStateMessage) {
-                emptyStateMessage.style.display = 'none';
-            }
-
-            // 2. Popola la lista con i veicoli
-            renderVehicles(vehicles); // Funzione che disegna i veicoli
-        }
-
-    } catch (error) {
-        console.error("Errore nel caricamento dei veicoli:", error);
-    }
-}
+};

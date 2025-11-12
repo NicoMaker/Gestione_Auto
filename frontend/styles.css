@@ -1,842 +1,1124 @@
-/* styles.css */
+/* --- FONT E VARIABILI GLOBALI --- */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
 
-/* Variabili di Tema */
 :root {
-    --primary-color: #007bff;
-    --secondary-color: #6c757d;
-    --success-color: #28a745;
-    --danger-color: #dc3545;
-    --warning-color: #ffc107;
-    --info-color: #17a2b8;
-
-    --bg-primary: #f8f9fa;
-    --bg-secondary: #ffffff;
-    --text-primary: #212529;
-    --text-secondary: #6c757d;
-    --border-color: #e9ecef;
-    --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-
-    --icon-blue: #007bff;
-    --icon-green: #28a745;
-    --icon-red: #dc3545;
-    --icon-gray: #adb5bd;
+  --bg-primary: #f4f7fa;
+  --bg-secondary: #ffffff;
+  --text-primary: #1a202c;
+  --text-secondary: #4a5568;
+  --border-color: #e2e8f0;
+  --accent-primary: #4a90e2;
+  --accent-primary-hover: #357abd;
+  --accent-secondary: #f5f5f5;
+  --accent-secondary-hover: #e0e0e0;
+  --accent-danger: #e53e3e;
+  --accent-danger-hover: #c53030;
+  --accent-success: #38a169;
+  --accent-warning: #dd6b20;
+  --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --transition-speed: 0.3s;
 }
 
-/* Tema Scuro */
 [data-theme="dark"] {
-    --bg-primary: #121212;
-    --bg-secondary: #1e1e1e;
-    --text-primary: #e0e0e0;
-    --text-secondary: #adb5bd;
-    --border-color: #343a40;
-    --card-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+  --bg-primary: #1a202c;
+  --bg-secondary: #2d3748;
+  --text-primary: #edf2f7;
+  --text-secondary: #a0aec0;
+  --border-color: #4a5568;
+  --accent-primary: #63b3ed;
+  --accent-primary-hover: #4299e1;
+  --accent-secondary: #4a5568;
+  --accent-secondary-hover: #718096;
+  --accent-danger: #fc8181;
+  --accent-danger-hover: #f56565;
 }
 
-/* Base Style */
+/* --- RESET E STILI DI BASE --- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
 body {
-    font-family: Arial, sans-serif;
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
-    margin: 0;
-    padding: 0;
-    transition: background-color 0.3s, color 0.3s;
-}
-
-h1, h2, h3 {
-    color: var(--text-primary);
-    margin-top: 0;
+  font-family: "Inter", sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  line-height: 1.6;
+  transition: background-color var(--transition-speed) ease,
+    color var(--transition-speed) ease;
 }
 
 .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 15px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
 }
 
-main {
-    padding-top: 40px; /* RIDOTTO: L'header non è più fisso */
-    padding-bottom: 40px;
-}
-
-/* Header */
+/* --- HEADER --- */
 .header {
-    background-color: var(--bg-secondary);
-    border-bottom: 1px solid var(--border-color);
-    box-shadow: var(--card-shadow);
-    /* RIMOSSO IL BLOCCO FISSO */
-    /* position: fixed; */
-    /* top: 0; */
-    /* left: 0; */
-    /* width: 100%; */
-    /* z-index: 1000; */
+  background-color: var(--bg-secondary);
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border-color);
+  box-shadow: var(--shadow-sm);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 }
 
 .header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .logo-section {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
-.logo-icon i {
-    font-size: 2rem;
-    color: var(--primary-color);
-    margin-right: 10px;
+.logo-icon {
+  font-size: 2rem;
+  color: var(--accent-primary);
 }
 
 .logo-text h1 {
-    font-size: 1.5rem;
-    margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
 }
 
 .logo-text p {
-    font-size: 0.8rem;
-    margin: 0;
-    color: var(--text-secondary);
+  font-size: 0.9rem;
+  color: var(--text-secondary);
 }
 
-.header-actions {
-    display: flex;
-    align-items: center;
-}
-
-/* Theme Toggle Button */
 .theme-toggle {
-    background: none;
-    border: 1px solid var(--border-color);
-    color: var(--text-secondary);
-    padding: 8px 15px;
-    border-radius: 20px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+  background: none;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 0.5rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all var(--transition-speed) ease;
 }
 
 .theme-toggle:hover {
-    background-color: var(--border-color);
+  background-color: var(--accent-secondary);
+  color: var(--text-primary);
 }
 
-[data-theme="dark"] .theme-toggle:hover {
-    background-color: #343a40;
+.theme-toggle .toggle-label {
+  display: none;
 }
 
-.theme-toggle i {
-    margin-right: 5px;
-}
-
-.toggle-label {
-    display: none; /* Nasconde l'etichetta per schermi più piccoli */
-}
-
-
-/* General Buttons */
-.btn {
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: opacity 0.2s, transform 0.1s;
-    border: 1px solid transparent;
-}
-
-.btn:hover {
-    opacity: 0.9;
-}
-
-.btn:active {
-    transform: scale(0.98);
-}
-
-.btn-primary {
-    background-color: var(--primary-color);
-    color: white;
-}
-
-.btn-secondary {
-    background-color: var(--secondary-color);
-    color: white;
-}
-
-.btn-danger {
-    background-color: var(--danger-color);
-    color: white;
-}
-
-.btn-success {
-    background-color: var(--success-color);
-    color: white;
-}
-
-.btn i {
-    margin-right: 5px;
-}
-
-.btn-full {
-    width: 100%;
-}
-
-.btn-icon {
-    background: none;
-    border: none;
-    color: var(--secondary-color);
-    font-size: 1.2rem;
-    padding: 5px;
-    border-radius: 50%;
-    transition: background-color 0.2s, color 0.2s;
-    cursor: pointer;
-    margin-left: 5px;
-}
-
-.btn-icon:hover {
-    background-color: var(--border-color);
-}
-
-/* Fix per i pulsanti di toggle nella lista */
-.maintenance-actions .btn-icon.btn-success {
-    background-color: var(--success-color);
-    color: white;
-    border-radius: 5px; /* Più quadrato per il checkbox */
-}
-
-.maintenance-actions .btn-icon.btn-secondary {
-    border: 1px solid var(--border-color);
-    border-radius: 5px; 
-}
-.maintenance-actions .btn-icon.btn-secondary i.fa-square {
-    color: var(--primary-color); /* Rende il quadrato più visibile */
-}
-
-/* Stats Grid */
+/* --- STATS --- */
 .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    margin-top: 30px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
 }
 
 .stat-card {
-    background-color: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: var(--card-shadow);
-    transition: transform 0.2s;
+  background-color: var(--bg-secondary);
+  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: all var(--transition-speed) ease;
 }
 
 .stat-card:hover {
-    transform: translateY(-5px);
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md);
 }
 
 .stat-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .stat-label {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    margin: 0;
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
 }
 
 .stat-value {
-    font-size: 2rem;
-    font-weight: bold;
-    margin: 5px 0 0;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary);
 }
 
 .stat-icon {
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    color: white;
+  font-size: 1.5rem;
+  padding: 1rem;
+  border-radius: 50%;
+  color: #fff;
 }
 
-.stat-icon-blue { background-color: var(--icon-blue); }
-.stat-icon-green { background-color: var(--icon-green); }
-.stat-icon-red { background-color: var(--icon-red); }
-.stat-icon-gray { background-color: var(--icon-gray); }
-
-/* Pulse Animation for Alerts */
-.pulse-animation {
-    animation: pulse 1s infinite;
+.stat-icon-blue {
+  background-color: var(--accent-primary);
+}
+.stat-icon-green {
+  background-color: var(--accent-success);
+}
+.stat-icon-red {
+  background-color: var(--accent-danger);
 }
 
-@keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.4); }
-    70% { box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(220, 53, 69, 0); }
-}
-
-/* Alerts Section */
+/* --- ALERTS SECTION STYLES (MESSAGGIO BELLO) --- */
 .alerts-section {
-    margin-top: 40px;
-    padding: 20px;
-    border-radius: 10px;
-    background-color: var(--bg-secondary);
-    border: 1px solid var(--warning-color);
-    box-shadow: 0 0 10px rgba(255, 193, 7, 0.2);
+  background-color: var(--bg-secondary);
+  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  margin-top: 2rem;
+  box-shadow: var(--shadow-sm);
 }
 
 .section-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 15px;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
 }
 
 .section-header h2 {
-    margin: 0;
-    color: var(--danger-color);
+  font-size: 1.25rem;
+  font-weight: 600;
 }
 
-.alerts-section .alert-icon {
-    color: var(--danger-color);
-    font-size: 1.5rem;
-    margin-right: 10px;
+.section-header .alert-icon {
+  color: var(--accent-warning);
+}
+
+.alerts-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .alert-message {
-    display: flex;
-    align-items: center;
-    padding: 15px;
-    margin-bottom: 10px;
-    border-radius: 5px;
-    border: 1px solid var(--border-color);
-    background-color: var(--bg-primary);
-    cursor: pointer;
-    transition: background-color 0.2s;
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: var(--shadow-md);
+  font-weight: 500;
+  transition: transform 0.2s ease;
+  cursor: pointer; /* Rende chiaro che è cliccabile */
 }
 
 .alert-message:hover {
-    background-color: var(--border-color);
+  transform: translateY(-2px);
+}
+
+.alert-message .alert-icon {
+  font-size: 1.75rem;
+  color: #fff;
+  flex-shrink: 0;
 }
 
 .alert-message.warning {
-    border-left: 5px solid var(--warning-color);
+  background-color: var(--accent-warning);
+  color: #fff; /* Testo bianco per contrasto sul giallo/arancio */
 }
 
-.alert-message-content {
-    flex-grow: 1;
-}
-
+/* Stile per i dettagli all'interno dell'alert */
 .alert-message-content strong {
-    display: block;
-    margin-bottom: 5px;
+  font-weight: 700;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.alert-message-content p {
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* Stile per la nota "clicca" */
+.alert-message-content small {
+  display: block;
+  font-size: 0.85rem;
+  opacity: 0.8;
+  margin-top: 0.25rem;
 }
 
 .alert-actions {
-    margin-left: 20px;
+  margin-left: auto; /* Spinge il pulsante a destra */
+  flex-shrink: 0;
 }
 
-/* Vehicles Section */
+/* --- VEHICLES SECTION --- */
 .vehicles-section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 40px;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 3rem;
+  margin-bottom: 1.5rem;
+}
+
+.vehicles-section-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
 }
 
 .vehicles-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
 }
 
 .vehicle-card {
-    background-color: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    padding: 20px;
-    box-shadow: var(--card-shadow);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    transition: transform 0.2s;
+  background-color: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: all var(--transition-speed) ease;
 }
 
 .vehicle-card:hover {
-    transform: translateY(-5px);
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md);
 }
 
+/* Stili card veicolo migliorati */
 .vehicle-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center; /* Allineato al centro per i bottoni */
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .vehicle-card-info {
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
-.vehicle-icon i {
-    font-size: 1.5rem;
-    color: var(--primary-color);
-    margin-right: 15px;
-}
-
-.vehicle-info h3 {
-    font-size: 1.2rem;
-    margin: 0 0 3px;
-}
-
-.vehicle-info p {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    margin: 0;
+.vehicle-icon {
+  font-size: 1.5rem;
+  color: var(--accent-primary);
+  background-color: var(--accent-secondary);
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
 }
 
 .vehicle-card-footer {
-    display: flex;
-    justify-content: space-between;
-    padding-top: 15px;
-    border-top: 1px solid var(--border-color);
-    margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  background-color: var(--bg-primary);
+  border-top: 1px solid var(--border-color);
 }
 
 .vehicle-card-info-item {
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    color: var(--text-secondary);
-}
-
-.vehicle-card-info-item i {
-    margin-right: 8px;
-    color: var(--primary-color);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-secondary);
 }
 
 .vehicle-card-actions {
-    display: flex;
-    gap: 10px;
+  display: flex;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
 }
 
-/* Empty State */
+.btn-full {
+  flex: 1;
+}
+
+/* --- BOTTONI ICONA MOBILE FRIENDLY --- */
+.btn-icon {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 1.25rem;
+  padding: 0.5rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px; /* Target touch ottimale */
+  height: 44px; /* Target touch ottimale */
+  flex-shrink: 0;
+}
+
+.btn-icon:hover {
+  background-color: var(--accent-secondary);
+  transform: scale(1.1); /* Aggiunge un leggero ingrandimento */
+}
+
+.btn-icon.btn-danger {
+  color: var(
+    --accent-danger
+  ); /* Imposta il colore rosso di default per l'icona */
+  font-size: 1.4rem; /* Aumenta la dimensione dell'icona del cestino */
+}
+
+.btn-icon.btn-danger:hover {
+  background-color: var(
+    --accent-danger
+  ); /* Sfondo rosso al passaggio del mouse */
+  color: white; /* L'icona diventa bianca per contrasto */
+  transform: scale(1.25); /* Ingrandisce di più al passaggio del mouse */
+}
+
+.btn-icon.btn-secondary {
+  color: var(--accent-primary);
+}
+
+/* Stile per il contenitore delle azioni nella card veicolo (in alto) */
+.vehicle-header-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* Stile per le azioni di modifica/eliminazione della manutenzione (nel popup) */
+.maintenance-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* --- BOTTONI GENERALI --- */
+.btn {
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all var(--transition-speed) ease;
+}
+
+.btn-primary {
+  background-color: var(--accent-primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-primary-hover);
+}
+
+.btn-secondary {
+  background-color: var(--accent-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+  background-color: var(--accent-secondary-hover);
+}
+
+.btn-danger {
+  background-color: var(--accent-danger);
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: var(--accent-danger-hover);
+}
+
+.btn-success {
+  background-color: var(--accent-success);
+  color: white;
+}
+
+.btn-success:hover {
+  background-color: #2f855a; /* Una tonalità più scura di verde */
+}
+
+.btn-sm {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+}
+
+/* --- EMPTY STATE --- */
 .empty-state {
-    text-align: center;
-    padding: 80px 20px;
-    background-color: var(--bg-secondary);
-    border: 1px dashed var(--border-color);
-    border-radius: 10px;
-    margin-top: 40px;
+  text-align: center;
+  padding: 4rem 2rem;
+  background-color: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  margin-top: 2rem;
+  display: none; /* Nascosto di default */
 }
 
 .empty-icon {
-    font-size: 3rem;
-    color: var(--text-secondary);
-    margin-bottom: 15px;
+  font-size: 4rem;
+  color: var(--text-secondary);
+  opacity: 0.5;
+  margin-bottom: 1.5rem;
 }
 
 .empty-state h3 {
-    margin: 0 0 10px;
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
 }
 
-/* Dialog and Modals */
+.empty-state p {
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+}
+
+/* --- DIALOGHI (MODAL) --- */
 .dialog-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 2000;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition-speed) ease,
+    visibility var(--transition-speed) ease;
 }
 
 .dialog-overlay.show {
-    display: flex;
+  opacity: 1;
+  visibility: visible;
 }
 
 .dialog {
-    background-color: var(--bg-secondary);
-    border-radius: 10px;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-    width: 90%;
-    max-width: 500px;
-    max-height: 90vh;
-    overflow-y: auto;
-    transform: scale(0.9);
-    opacity: 0;
-    transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+  background-color: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  width: 90%;
+  max-width: 500px;
+  display: flex;
+  flex-direction: column;
+  transform: scale(0.95);
+  transition: transform var(--transition-speed) ease;
 }
 
 .dialog-overlay.show .dialog {
-    transform: scale(1);
-    opacity: 1;
+  transform: scale(1);
 }
 
 .dialog-large {
-    max-width: 800px;
+  max-width: 800px;
 }
 
 .dialog-header {
-    padding: 20px;
-    border-bottom: 1px solid var(--border-color);
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.dialog-header h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
 }
 
 .dialog-subtitle {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    margin-top: 5px;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
 }
 
 .dialog-body {
-    padding: 20px;
+  padding: 1.5rem;
+  flex-grow: 1;
+  overflow-y: auto;
+  max-height: 70vh;
 }
 
-.dialog-footer, .dialog-actions {
-    padding: 20px;
-    border-top: 1px solid var(--border-color);
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
+.dialog-footer,
+.dialog-actions {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  background-color: var(--bg-primary);
+  border-bottom-left-radius: var(--radius-lg);
+  border-bottom-right-radius: var(--radius-lg);
 }
 
-/* Forms */
+.dialog-actions {
+  justify-content: center;
+}
+
+/* --- FORM --- */
 .form-group {
-    margin-bottom: 15px;
+  margin-bottom: 1.5rem;
 }
 
 .form-group label {
-    display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
-    font-size: 0.9rem;
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
 }
 
-.form-group input[type="text"],
-.form-group input[type="number"],
-.form-group input[type="date"],
+.form-group input,
 .form-group select {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid var(--border-color);
-    border-radius: 5px;
-    background-color: var(--bg-primary);
-    color: var(--text-primary);
-    box-sizing: border-box;
-    transition: border-color 0.2s;
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: border-color var(--transition-speed) ease,
+    box-shadow var(--transition-speed) ease;
 }
 
-.form-group input:focus, .form-group select:focus {
-    border-color: var(--primary-color);
-    outline: none;
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.3);
 }
 
 .form-row {
-    display: flex;
-    gap: 15px;
+  display: flex;
+  gap: 1rem;
 }
 
 .form-row .form-group {
-    flex: 1;
+  flex: 1;
 }
 
-/* NUOVO: Stile per il gruppo checkbox */
-.form-group-checkbox {
-    display: flex;
-    align-items: center;
-    margin-bottom: 20px;
-    padding: 10px;
-    background-color: var(--bg-primary);
-    border: 1px solid var(--border-color);
-    border-radius: 5px;
-}
-
-.form-group-checkbox label {
-    font-weight: normal; 
-    margin-bottom: 0;
-    cursor: pointer;
-}
-
-/* Stile per il checkbox (per renderlo più personalizzato) */
-.form-group-checkbox input[type="checkbox"] {
-    width: 20px;
-    height: 20px;
-    margin-right: 10px;
-    cursor: pointer;
-    padding: 0;
-    border: 1px solid var(--text-secondary);
-    border-radius: 3px;
-    appearance: none;
-    -webkit-appearance: none;
-    transition: background-color 0.2s, border-color 0.2s;
-    flex-shrink: 0;
-}
-
-.form-group-checkbox input[type="checkbox"]:checked {
-    background-color: var(--success-color);
-    border-color: var(--success-color);
-    position: relative;
-}
-
-.form-group-checkbox input[type="checkbox"]:checked::after {
-    /* Icona di spunta (richiede font-family con Font Awesome) */
-    content: "\f00c"; 
-    font-family: "Font Awesome 5 Free";
-    font-weight: 900;
-    position: absolute;
-    color: white;
-    font-size: 0.8rem;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-}
-
-
-/* Details Dialog Specifics */
+/* --- DETTAGLI VEICOLO DIALOG --- */
 .update-km-card {
-    background-color: var(--bg-primary);
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
-    margin-bottom: 20px;
-}
-
-.update-km-card label {
-    font-weight: bold;
-    margin-bottom: 10px;
-    display: block;
+  background-color: var(--bg-primary);
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 2rem;
 }
 
 .update-km-controls {
-    display: flex;
-    gap: 10px;
-    align-items: center;
+  display: flex;
+  gap: 1rem;
+  align-items: center;
 }
 
 .update-km-input {
-    flex-grow: 1;
+  flex-grow: 1;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-secondary);
 }
 
 .maintenances-list-section h3 {
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 10px;
-    margin-bottom: 15px;
-    font-size: 1.1rem;
-    color: var(--primary-color);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.maintenances-list-section h3 span {
-    font-size: 0.8rem;
-    font-weight: normal;
-    color: var(--text-secondary);
-    margin-left: 10px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
 }
 
 .maintenance-item {
-    display: flex;
-    align-items: flex-start;
-    padding: 15px 0;
-    border-bottom: 1px solid var(--border-color);
-    transition: background-color 0.1s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 0.75rem;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
 }
 
-.maintenance-item:last-child {
-    border-bottom: none;
+.maintenance-info {
+  flex-grow: 1;
 }
 
-.maintenance-icon {
-    font-size: 1.2rem;
-    color: var(--primary-color);
-    margin-right: 15px;
-    min-width: 20px;
+.maintenance-info p {
+  font-weight: 600;
 }
 
-.maintenance-content {
-    flex-grow: 1;
+.maintenance-info span {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
 }
 
-.maintenance-content h4 {
-    margin: 0 0 5px;
-    font-size: 1rem;
+.maintenance-item.completed {
+  background-color: #e6fffa;
+  border-color: #b2f5ea;
+}
+
+[data-theme="dark"] .maintenance-item.completed {
+  background-color: #2c5282;
+  border-color: #4a5568;
+}
+
+.maintenance-item.completed .maintenance-info p {
+  text-decoration: line-through;
+  color: var(--text-secondary);
+}
+
+/* Stili dettagli manutenzione migliorati */
+.maintenance-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.maintenance-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.maintenance-item-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.maintenance-checkbox {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+
+.maintenance-checkbox .fa-check-circle {
+  color: var(--accent-success);
+}
+
+.maintenance-title.completed {
+  text-decoration: line-through;
+  color: var(--text-secondary);
 }
 
 .maintenance-details {
-    display: flex;
-    gap: 15px;
-    margin-bottom: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-left: 2.2rem; /* Allineato con il titolo */
 }
 
 .maintenance-detail-item {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    display: flex;
-    align-items: center;
-}
-
-.maintenance-detail-item i {
-    margin-right: 5px;
-    font-size: 0.8rem;
-}
-
-.maintenance-notes {
-    font-style: italic;
-    font-size: 0.85rem;
-    margin: 5px 0 0;
-}
-
-.maintenance-actions {
-    margin-left: 15px;
-    display: flex;
-    gap: 5px;
-    align-items: center; /* Allinea verticalmente i pulsanti */
-}
-
-/* Status Colors */
-.maintenance-item.maintenance-due-soon {
-    background-color: rgba(255, 193, 7, 0.05); /* light yellow bg */
-}
-
-.maintenance-item.maintenance-overdue {
-    background-color: rgba(220, 53, 69, 0.05); /* light red bg */
-}
-
-.maintenance-item.maintenance-completed {
-    background-color: rgba(40, 167, 69, 0.05); /* light green bg */
-    opacity: 0.7;
-}
-
-.maintenance-completed-date {
-    font-size: 0.8rem;
-    color: var(--success-color);
-    font-weight: bold;
-    margin-top: 5px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
 }
 
 .text-overdue {
-    color: var(--danger-color) !important;
+  color: var(--accent-danger);
+}
+.text-normal {
+  color: var(--text-secondary);
+}
+.maintenance-completed-date {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
 }
 
-.text-due-soon {
-    color: var(--warning-color) !important;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-    .header-content {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    .header-actions {
-        margin-top: 10px;
-    }
-    .toggle-label {
-        display: inline;
-    }
-    .vehicles-section-header {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    .vehicles-section-header button {
-        margin-top: 10px;
-    }
-    .vehicle-card-actions {
-        flex-direction: column;
-    }
-    .alert-message {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-    .alert-actions {
-        margin-top: 10px;
-        margin-left: 0;
-        width: 100%;
-        display: flex;
-        justify-content: flex-end;
-    }
-    .dialog-large {
-        max-width: 95%;
-    }
+/* --- RESPONSIVE DESIGN --- */
+@media (min-width: 768px) {
+  .theme-toggle .toggle-label {
+    display: inline;
+  }
 }
 
 @media (max-width: 768px) {
-    /* Applica il layout a colonna a tutti i principali contenitori di azioni */
-    .dialog-footer,
-    .dialog-actions,
-    .vehicle-actions,
-    .header-actions {
-        /* Impila i pulsanti uno sopra l'altro */
-        flex-direction: column;
-        /* Assicura che il contenitore occupi tutta la larghezza disponibile */
-        width: 100%; 
-        /* Centra/allinea gli elementi impilati */
-        align-items: stretch;
-        /* Aggiunge un po' di spazio tra i pulsanti impilati */
-        gap: 10px; 
-        /* Rimuove eventuali allineamenti orizzontali precedenti */
-        justify-content: center; 
-    }
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
 
-    /* Rende tutti i pulsanti all'interno di questi contenitori a larghezza piena */
-    .dialog-footer .btn,
-    .dialog-actions .btn,
-    .vehicle-actions .btn,
-    .header-actions .btn {
-        width: 100%;
-        /* Rimuove eventuali margini laterali che potrebbero impedire il full-width */
-        margin-left: 0;
-        margin-right: 0;
-    }
+  .vehicles-section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
 
-    /* Se hai altri gruppi di pulsanti in linea, potresti usare una classe generica come .btn-group */
-    /* .btn-group {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        width: 100%;
-    } */
+  .vehicles-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dialog-footer,
+  .dialog-actions {
+    flex-direction: column-reverse;
+  }
+
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
 }
 
-@media (max-width: 768px) {
-    /* ... (Il codice precedente per i bottoni full-width rimane utile qui) ... */
+@media (max-width: 480px) {
+  body {
+    font-size: 14px;
+  }
 
-    /* Regola i dialog per evitare che il contenuto troppo largo forzi lo scroll globale */
-    .dialog {
-        /* Permette al dialog di contenere elementi larghi senza uscire dallo schermo */
-        width: 95%; /* Lascia un piccolo margine laterale */
-        max-width: 95%;
-        /* Aggiungo una regola per lo scroll orizzontale se il contenuto lo richiede */
-        overflow-x: hidden; /* Nascondi lo scroll orizzontale del dialog stesso */
-    }
+  .container {
+    padding: 0 15px;
+  }
 
-    /* **ABILITA LO SCROLL ORIZZONTALE SUL CORPO DEL DIALOG** */
-    .dialog-body {
-        /* Se il contenuto (es. un form o una tabella) supera la larghezza, permetti lo scroll */
-        overflow-x: auto; 
-        /* Mantieni lo scroll verticale se il body è troppo lungo */
-        overflow-y: auto; 
-    }
-    
-    /* Regola le tabelle, se presenti, per assicurare che forzino lo scroll */
-    .dialog-body table {
-        /* Se la tabella è più larga del dialog, questo le impedisce di restringersi */
-        min-width: 600px; /* Esempio: imposta una larghezza minima se le colonne sono molte */
-        width: max-content; /* Oppure usa max-content per la larghezza minima */
-    }
+  .logo-text h1 {
+    font-size: 1.2rem;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+  }
+
+  .stat-icon {
+    padding: 0.75rem;
+    font-size: 1.2rem;
+  }
+
+  .dialog {
+    width: 100%;
+    height: 100%;
+    border-radius: 0;
+    max-height: 100vh;
+  }
+
+  .dialog-body {
+    flex-shrink: 1; /* Permette al corpo di restringersi se necessario */
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .maintenance-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .maintenance-item-header {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  /* Adattamento mobile per gli alerts */
+  .alert-message {
+    flex-direction: row; /* Mantieni in riga */
+    align-items: center;
+    padding: 0.75rem 1rem;
+  }
+
+  .alert-message .alert-icon {
+    font-size: 1.5rem;
+  }
+}
+
+/* --- ANIMAZIONI --- */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stat-card,
+.vehicle-card,
+.alert-item {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+/* Stile per l'icona di avviso attiva */
+#alertsIcon.active {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(229, 62, 62, 0.7);
+  }
+  70% {
+    transform: scale(1.1);
+    box-shadow: 0 0 10px 20px rgba(229, 62, 62, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(229, 62, 62, 0);
+  }
+}
+
+
+
+
+/* --- BOTTONI ICONA MOBILE FRIENDLY --- */
+.btn-icon {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 1.1rem;
+  padding: 0.5rem;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all var(--transition-speed) ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+}
+
+.btn-icon:hover {
+  transform: scale(1.1);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-icon.btn-danger {
+  color: var(--accent-danger);
+  background-color: rgba(229, 62, 62, 0.1);
+  border-color: rgba(229, 62, 62, 0.2);
+  font-size: 1.15rem;
+}
+
+.btn-icon.btn-danger:hover {
+  background-color: var(--accent-danger);
+  color: white;
+  border-color: var(--accent-danger);
+  transform: scale(1.15);
+  box-shadow: 0 4px 12px rgba(229, 62, 62, 0.3);
+}
+
+.btn-icon.btn-secondary {
+  color: var(--accent-primary);
+  background-color: rgba(74, 144, 226, 0.1);
+  border-color: rgba(74, 144, 226, 0.2);
+}
+
+.btn-icon.btn-secondary:hover {
+  background-color: var(--accent-primary);
+  color: white;
+  border-color: var(--accent-primary);
+}
+
+/* --- LAYOUT BOTTONI NEI MODALI (MOBILE) --- */
+
+/* Assicura che i bottoni siano affiancati sul desktop e con un piccolo spazio */
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end; /* Allinea a destra */
+  gap: 0.75rem; /* Spazio tra i bottoni */
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+/* Regole per schermi piccoli (es. smartphone) */
+@media (max-width: 600px) {
+  .dialog-footer {
+    /* Impila i bottoni verticalmente e inverte l'ordine: */
+    /* Salva Modifiche (Primary) andrà sopra, Chiudi (Secondary) andrà sotto. */
+    flex-direction: column-reverse;
+  }
+
+  .dialog-footer button {
+    /* Rende i bottoni a larghezza piena per una migliore usabilità mobile */
+    width: 100%;
+  }
+}
+
+/* --- STILE CHECKBOX CUSTOM (SWITCH) --- */
+
+.form-group-checkbox {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.form-group-checkbox label {
+    margin-left: 0.5rem;
+    cursor: pointer;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* Stile per il gruppo dello switch */
+.custom-switch-group {
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background-color: var(--bg-secondary);
+    box-shadow: var(--shadow-sm);
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+}
+
+/* Nasconde l'input checkbox standard */
+.custom-switch-input {
+    display: none;
+}
+
+/* Stile del contenitore dello switch (la pillola) */
+.custom-switch-label {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; /* Sposta lo switch a destra */
+    gap: 1rem;
+    margin-left: 0;
+    flex-grow: 1; /* Permette alla label di occupare lo spazio rimanente */
+}
+
+.custom-switch-slider {
+    position: relative;
+    display: inline-block;
+    width: 100px; /* Larghezza maggiore per contenere il testo */
+    height: 34px;
+    border-radius: 17px; /* Forma a pillola */
+    background-color: var(--accent-danger); /* Colore quando è 'Non Completata' */
+    cursor: pointer;
+    transition: background-color 0.4s;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+/* Pseudoelemento che simula il "pomello" e il testo */
+.custom-switch-slider::after {
+    content: "NON COMPLETATA"; /* Testo predefinito */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    border-radius: 17px;
+    transition: transform 0.4s;
+}
+
+/* Cambia colore e testo quando è checked (Completata) */
+.custom-switch-input:checked + .custom-switch-label .custom-switch-slider {
+    background-color: var(--accent-success); /* Colore quando è 'Completata' */
+}
+
+.custom-switch-input:checked + .custom-switch-label .custom-switch-slider::after {
+    content: "COMPLETATA"; /* Testo quando è completata */
+    transform: none; /* Rimuove eventuali trasformazioni se volessimo animarlo */
+}
+
+/* Aggiunge un po' di spazio tra il testo "Stato:" e lo switch */
+.custom-switch-label span:first-child {
+    font-size: 1.1rem;
+}
+
+/* --- STILE CHECKBOX CUSTOM (SWITCH) --- */
+
+.form-group-checkbox {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.form-group-checkbox label {
+    margin-left: 0.5rem;
+    cursor: pointer;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+/* Stile per il gruppo dello switch */
+.custom-switch-group {
+    padding: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg); /* Usiamo la variabile per la consistenza */
+    background-color: var(--bg-secondary);
+    box-shadow: var(--shadow-sm);
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+    gap: 1rem;
+}
+
+/* Nasconde l'input checkbox standard */
+.custom-switch-input {
+    display: none;
+}
+
+/* Stile del contenitore dello switch (la pillola) */
+.custom-switch-label {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; /* Sposta lo switch a destra */
+    gap: 1rem;
+    margin-left: 0;
+    flex-grow: 1; /* Permette alla label di occupare lo spazio rimanente */
+}
+
+.custom-switch-slider {
+    position: relative;
+    display: inline-block;
+    width: 130px; /* Aumentato leggermente la larghezza per il testo */
+    height: 34px;
+    border-radius: 17px; /* Forma a pillola */
+    background-color: var(--accent-danger); /* Colore quando è 'Non Completata' */
+    cursor: pointer;
+    transition: background-color 0.4s;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+/* Pseudoelemento che simula il "pomello" e il testo */
+.custom-switch-slider::after {
+    /* ⭐ AGGIORNATO: Capitalizzazione pulita */
+    content: "Non Completata"; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    border-radius: 17px;
+    transition: transform 0.4s;
+}
+
+/* Cambia colore e testo quando è checked (Completata) */
+.custom-switch-input:checked + .custom-switch-label .custom-switch-slider {
+    background-color: var(--accent-success); /* Colore quando è 'Completata' */
+}
+
+.custom-switch-input:checked + .custom-switch-label .custom-switch-slider::after {
+    /* ⭐ AGGIORNATO: Capitalizzazione pulita */
+    content: "Completata"; 
+    transform: none; 
+}
+
+/* Aggiunge un po' di spazio tra il testo "Stato:" e lo switch */
+.custom-switch-label span:first-child {
+    font-size: 1.1rem;
 }

@@ -1,15 +1,11 @@
-// script.js (LOGICA FRONTEND COMPLETA)
+// script.js - LOGICA FRONTEND COMPLETA CON API FUNZIONANTI
 
 // ===================================
-// GESTIONE TIPI MANUTENZIONE DA JSON E ORDINAMENTO
+// GESTIONE TIPI MANUTENZIONE DA JSON
 // ===================================
 
-let maintenanceTypes = []; // Array per i tipi di manutenzione dal JSON (ordinato)
+let maintenanceTypes = [];
 
-/**
- * Recupera e ordina i tipi di manutenzione dal file JSON.
- * Questo è l'unico fetch che legge un file statico, non un API.
- */
 async function loadMaintenanceTypes() {
     try {
         const response = await fetch('maintenance_types.json');
@@ -17,7 +13,6 @@ async function loadMaintenanceTypes() {
         const data = await response.json();
         
         if (Array.isArray(data.types)) {
-            // Ordina in base all'alfabeto italiano
             maintenanceTypes = data.types.sort((a, b) => a.localeCompare(b, 'it', { sensitivity: 'base' }));
             return maintenanceTypes;
         } else {
@@ -25,31 +20,25 @@ async function loadMaintenanceTypes() {
             return [];
         }
     } catch (error) {
-        console.error("Errore nel recupero o nell'ordinamento dei tipi di manutenzione:", error);
-        // Fallback in caso di errore
+        console.error("Errore nel recupero tipi manutenzione:", error);
         maintenanceTypes = ["Altro", "Controllo", "Collaudo"].sort((a, b) => a.localeCompare(b, 'it', { sensitivity: 'base' }));
         return maintenanceTypes;
     }
 }
 
-/**
- * Popola l'elemento <select> specificato con le opzioni dei tipi di manutenzione.
- */
 function populateMaintenanceTypeSelect(elementId, selectedValue = null) {
     const selectEl = document.getElementById(elementId);
     if (!selectEl) return;
 
-    // Pulisce le opzioni esistenti e aggiunge il placeholder
     selectEl.innerHTML = '<option value="" disabled selected>Seleziona tipo</option>';
 
-    // Aggiunge le opzioni ordinate
     maintenanceTypes.forEach(type => {
         const option = document.createElement('option');
         option.value = type;
         option.textContent = type;
         if (selectedValue === type) {
             option.selected = true;
-             selectEl.querySelector('option[disabled]').selected = false;
+            selectEl.querySelector('option[disabled]').selected = false;
         }
         selectEl.appendChild(option);
     });
@@ -57,23 +46,24 @@ function populateMaintenanceTypeSelect(elementId, selectedValue = null) {
 
 
 // ===================================
-// FUNZIONI DI ACCESSO ALL'API (CRUD) - Si collegano al server.js
+// GESTIONE API - CORRETTA E FUNZIONANTE
 // ===================================
 
 async function getVehicles() {
     try {
-        const response = await fetch('/api/vehicles');
+        const response = await fetch('http://localhost:3000/api/vehicles');
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         return await response.json();
     } catch (error) {
         console.error("Errore nel recupero dei veicoli:", error);
+        showAlertDialog('Errore', 'Impossibile connettere al server. Assicurati che sia in esecuzione su http://localhost:3000');
         return [];
     }
 }
 
 async function saveVehicle(vehicle) {
     const method = vehicle.id ? 'PUT' : 'POST';
-    const url = vehicle.id ? `/api/vehicles/${vehicle.id}` : '/api/vehicles';
+    const url = vehicle.id ? `http://localhost:3000/api/vehicles/${vehicle.id}` : 'http://localhost:3000/api/vehicles';
 
     const bodyData = {
         brand: vehicle.brand,
@@ -104,7 +94,7 @@ async function saveVehicle(vehicle) {
 
 async function deleteVehicle(vehicleId) {
     try {
-        const response = await fetch(`/api/vehicles/${vehicleId}`, { method: 'DELETE' });
+        const response = await fetch(`http://localhost:3000/api/vehicles/${vehicleId}`, { method: 'DELETE' });
         if (response.status === 404) throw new Error("Veicolo non trovato.");
         if (!response.ok && response.status !== 204) throw new Error(`HTTP error! status: ${response.status}`);
         return true;
@@ -117,7 +107,7 @@ async function deleteVehicle(vehicleId) {
 
 async function getMaintenances() {
     try {
-        const response = await fetch('/api/maintenances');
+        const response = await fetch('http://localhost:3000/api/maintenances');
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         return await response.json();
     } catch (error) {
@@ -128,7 +118,7 @@ async function getMaintenances() {
 
 async function saveMaintenance(maintenance) {
     const method = maintenance.id ? 'PUT' : 'POST';
-    const url = maintenance.id ? `/api/maintenances/${maintenance.id}` : `/api/vehicles/${maintenance.vehicleId}/maintenances`;
+    const url = maintenance.id ? `http://localhost:3000/api/maintenances/${maintenance.id}` : `http://localhost:3000/api/vehicles/${maintenance.vehicleId}/maintenances`;
 
     const bodyData = {
         vehicleId: maintenance.vehicleId,
@@ -141,11 +131,9 @@ async function saveMaintenance(maintenance) {
         completedAt: maintenance.completed ? (maintenance.completedAt || new Date().toISOString()) : null
     };
     
-    // Per PUT/aggiornamento su maintenance individuale
     if (maintenance.id) {
-        delete bodyData.vehicleId; // Il vehicleId non dovrebbe essere aggiornato
+        delete bodyData.vehicleId;
         
-        // Il body deve includere solo i campi che possono essere aggiornati (meno vehicleId/id)
         const updateBody = {
             type: bodyData.type,
             dueDate: bodyData.dueDate,
@@ -170,7 +158,7 @@ async function saveMaintenance(maintenance) {
             return null;
         }
 
-    } else { // POST/creazione su veicolo
+    } else {
         try {
             const response = await fetch(url, {
                 method: method,
@@ -193,7 +181,7 @@ async function saveMaintenance(maintenance) {
 
 async function deleteMaintenance(maintenanceId) {
     try {
-        const response = await fetch(`/api/maintenances/${maintenanceId}`, { method: 'DELETE' });
+        const response = await fetch(`http://localhost:3000/api/maintenances/${maintenanceId}`, { method: 'DELETE' });
         if (response.status === 404) throw new Error("Manutenzione non trovata.");
         if (!response.ok && response.status !== 204) throw new Error(`HTTP error! status: ${response.status}`);
         return true;
@@ -206,7 +194,7 @@ async function deleteMaintenance(maintenanceId) {
 
 
 // ===================================
-// GESTIONE STATO GLOBALE E UTILITY
+// GESTIONE STATO GLOBALE
 // ===================================
 
 let vehicles = [];
@@ -214,7 +202,6 @@ let maintenances = [];
 let alerts = [];
 let currentVehicle = null;
 let currentMaintenance = null;
-
 
 function getVehicleById(id) {
     return vehicles.find(v => v.id === id);
@@ -225,12 +212,9 @@ function formatDate(dateString) {
     return new Date(dateString).toLocaleDateString('it-IT');
 }
 
-/**
- * Controlla lo stato di scadenza di una manutenzione.
- */
 function checkMaintenanceDue(maintenance, currentKm) {
     const now = new Date();
-    const dueDate = maintenance.dueDate ? new Date(maintenance.dueDate + 'T00:00:00') : null; // Aggiunge T00:00:00 per evitare problemi di fuso orario
+    const dueDate = maintenance.dueDate ? new Date(maintenance.dueDate + 'T00:00:00') : null;
     const dueKm = maintenance.dueKm;
     const notifyDaysBefore = maintenance.notifyDaysBefore || 7;
 
@@ -239,7 +223,6 @@ function checkMaintenanceDue(maintenance, currentKm) {
     let kmUntil = null;
     let daysUntil = Infinity;
 
-    // 1. Check date
     if (dueDate) {
         daysUntil = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
         if (daysUntil < 0) {
@@ -252,10 +235,8 @@ function checkMaintenanceDue(maintenance, currentKm) {
         }
     }
 
-    // 2. Check km
     if (dueKm !== null && dueKm !== undefined && currentKm !== null && currentKm !== undefined) {
         kmUntil = dueKm - currentKm;
-        // Notifica se mancano meno di 3000km o se è superato
         if (kmUntil < 0) {
             isDue = true;
             const kmOverdue = Math.abs(kmUntil);
@@ -268,7 +249,6 @@ function checkMaintenanceDue(maintenance, currentKm) {
         }
     }
 
-    // Normalizza la ragione per scadenze doppie
     if (daysUntil < 0 && kmUntil < 0) {
         reason = `SCADUTO per data e km`;
     } else if (daysUntil < 0) {
@@ -283,7 +263,6 @@ function checkMaintenanceDue(maintenance, currentKm) {
         reason = `Scadenza Imminente (Km)`;
     }
     
-    // Assegna stato di priorità
     let status = 'none';
     if (daysUntil < 0 || kmUntil < 0) {
         status = 'overdue';
@@ -294,9 +273,6 @@ function checkMaintenanceDue(maintenance, currentKm) {
     return { isDue, daysUntil, kmUntil, reason, status };
 }
 
-/**
- * Controlla tutte le manutenzioni per generare la lista di alerts.
- */
 function checkAllMaintenances(vehicles, maintenances) {
     const alerts = [];
 
@@ -318,13 +294,11 @@ function checkAllMaintenances(vehicles, maintenances) {
         });
     });
 
-    // Ordina: Scaduti (overdue) > Imminenti (imminent)
     alerts.sort((a, b) => {
         if (a.status === 'overdue' && b.status !== 'overdue') return -1;
         if (a.status !== 'overdue' && b.status === 'overdue') return 1;
         
-        // Ordina i non completati per la scadenza più vicina (min daysUntil > min kmUntil)
-        const aValue = a.daysUntil < a.kmUntil / 50 ? a.daysUntil : a.kmUntil / 50; // Usa giorni o un equivalente km/giorno
+        const aValue = a.daysUntil < a.kmUntil / 50 ? a.daysUntil : a.kmUntil / 50;
         const bValue = b.daysUntil < b.kmUntil / 50 ? b.daysUntil : b.kmUntil / 50; 
         
         return aValue - bValue;
@@ -334,7 +308,10 @@ function checkAllMaintenances(vehicles, maintenances) {
 }
 
 
-// Gestione Tema
+// ===================================
+// GESTIONE TEMA CHIARO/SCURO
+// ===================================
+
 const THEME_KEY = 'theme';
 
 function getInitialTheme() {
@@ -355,16 +332,55 @@ function updateThemeToggleUI(theme) {
     if (!btn) return;
     btn.setAttribute('aria-label', theme === 'dark' ? 'Passa al tema chiaro' : 'Passa al tema scuro');
     btn.innerHTML = theme === 'dark'
-        ? '<i class="fas fa-sun"></i><span class="toggle-label">Chiaro</span>'
-        : '<i class="fas fa-moon"></i><span class="toggle-label">Scuro</span>';
+        ? '<i class="fas fa-sun"></i>'
+        : '<i class="fas fa-moon"></i>';
 }
+
+
+// ===================================
+// GESTIONE MODALI CON ESC KEY E OVERLAY
+// ===================================
+
+class ModalManager {
+    constructor() {
+        this.activeModals = [];
+        this.setupEscKeyListener();
+    }
+
+    setupEscKeyListener() {
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && this.activeModals.length > 0) {
+                const lastModal = this.activeModals[this.activeModals.length - 1];
+                const closeBtn = lastModal.querySelector('.modal-close');
+                if (closeBtn) closeBtn.click();
+            }
+        });
+    }
+
+    open(modalElement) {
+        if (!this.activeModals.includes(modalElement)) {
+            this.activeModals.push(modalElement);
+        }
+        modalElement.classList.add('show');
+        document.body.style.overflow = 'hidden';
+    }
+
+    close(modalElement) {
+        modalElement.classList.remove('show');
+        this.activeModals = this.activeModals.filter(m => m !== modalElement);
+        if (this.activeModals.length === 0) {
+            document.body.style.overflow = 'auto';
+        }
+    }
+}
+
+const modalManager = new ModalManager();
 
 
 // ===================================
 // GESTIONE UI E RENDERING
 // ===================================
 
-// Selettori degli elementi UI
 const totalVehiclesEl = document.getElementById('totalVehicles');
 const totalMaintenancesEl = document.getElementById('totalMaintenances');
 const completedMaintenancesEl = document.getElementById('completedMaintenances');
@@ -378,7 +394,6 @@ const alertsContainerEl = document.getElementById('alertsContainer');
 const vehiclesContainerEl = document.getElementById('vehiclesContainer');
 const emptyStateEl = document.getElementById('emptyState');
 
-// Dialogs
 const dialogAddVehicleEl = document.getElementById('dialogAddVehicle');
 const dialogAddMaintenanceEl = document.getElementById('dialogAddMaintenance');
 const dialogVehicleDetailsEl = document.getElementById('dialogVehicleDetails');
@@ -386,7 +401,6 @@ const dialogEditMaintenanceEl = document.getElementById('dialogEditMaintenance')
 const dialogConfirmEl = document.getElementById('dialogConfirm');
 const dialogAlertEl = document.getElementById('dialogAlert');
 
-// Forms
 const formAddVehicleEl = document.getElementById('formAddVehicle');
 const formAddMaintenanceEl = document.getElementById('formAddMaintenance');
 const formEditMaintenanceEl = document.getElementById('formEditMaintenance');
@@ -401,23 +415,21 @@ function renderStats() {
     completedMaintenancesEl.textContent = completedCount;
     activeAlertsEl.textContent = alerts.length;
     
-    // Aggiorna etichette (singolare/plurale)
     totalVehiclesLabelEl.textContent = vehicles.length === 1 ? 'Veicolo' : 'Veicoli';
     totalMaintenancesLabelEl.textContent = maintenances.length === 1 ? 'Manutenzione Totale' : 'Manutenzioni Totali';
     activeAlertsLabelEl.textContent = alerts.length === 1 ? 'Scadenza Attiva' : 'Scadenze Attive';
     
-    // Aggiorna l'icona degli alerts
     if (alerts.length > 0) {
         alertsIconEl.className = 'stat-icon stat-icon-red pulse-animation';
         alertsIconEl.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
     } else {
-        alertsIconEl.className = 'stat-icon stat-card-warning .stat-icon';
+        alertsIconEl.className = 'stat-icon';
         alertsIconEl.innerHTML = '<i class="fas fa-calendar-check"></i>';
     }
 }
 
 function renderAlerts() {
-    alertsContainerEl.innerHTML = ''; // Pulisce i vecchi alerts
+    alertsContainerEl.innerHTML = '';
 
     if (alerts.length > 0) {
         alertsSectionEl.style.display = 'block';
@@ -426,7 +438,7 @@ function renderAlerts() {
             const isOverdue = alert.status === 'overdue';
             const alertCard = document.createElement('div');
             alertCard.className = 'alert-card';
-            alertCard.onclick = () => handleViewDetails(alert.vehicle.id); // Cliccando porta ai dettagli del veicolo
+            alertCard.onclick = () => handleViewDetails(alert.vehicle.id);
 
             alertCard.innerHTML = `
                 <div class="alert-icon">
@@ -451,7 +463,7 @@ function renderAlerts() {
 }
 
 function renderVehicles() {
-    vehiclesContainerEl.innerHTML = ''; // Pulisce le vecchie cards
+    vehiclesContainerEl.innerHTML = '';
     
     if (vehicles.length === 0) {
         emptyStateEl.style.display = 'block';
@@ -462,7 +474,6 @@ function renderVehicles() {
     emptyStateEl.style.display = 'none';
     vehiclesContainerEl.style.display = 'grid';
 
-    // Ordina: Veicoli con alerts > Ultimo inserito
     vehicles.sort((a, b) => {
         const aAlerts = alerts.filter(alert => alert.vehicle.id === a.id).length;
         const bAlerts = alerts.filter(alert => alert.vehicle.id === b.id).length;
@@ -470,10 +481,8 @@ function renderVehicles() {
         if (aAlerts > 0 && bAlerts === 0) return -1;
         if (aAlerts === 0 && bAlerts > 0) return 1;
         
-        // Ordina per ultimo inserimento (id più alto) se non ci sono alert
         return parseInt(b.id) - parseInt(a.id); 
     });
-
 
     vehicles.forEach(vehicle => {
         const vehicleMaintenances = maintenances.filter(m => m.vehicleId === vehicle.id);
@@ -545,9 +554,6 @@ function renderVehicles() {
     });
 }
 
-/**
- * Aggiorna i dati globali e rifà il rendering completo dell'UI.
- */
 async function loadData() {
     [vehicles, maintenances] = await Promise.all([getVehicles(), getMaintenances()]);
     alerts = checkAllMaintenances(vehicles, maintenances);
@@ -556,17 +562,16 @@ async function loadData() {
     renderVehicles();
 }
 
-// ===================================
-// GESTIONE EVENTI (HANDLERS)
-// ===================================
 
-/* --- VEICOLI --- */
+// ===================================
+// GESTIONE EVENTI - VEICOLI
+// ===================================
 
 function handleAddVehicle() {
     currentVehicle = null;
     formAddVehicleEl.reset();
     document.getElementById('dialogAddVehicleTitle').textContent = 'Aggiungi Nuovo Veicolo';
-    dialogAddVehicleEl.classList.add('show');
+    modalManager.open(dialogAddVehicleEl);
 }
 
 function handleEditVehicle(vehicleId) {
@@ -576,14 +581,13 @@ function handleEditVehicle(vehicleId) {
     currentVehicle = vehicle;
     document.getElementById('dialogAddVehicleTitle').textContent = `Modifica Veicolo: ${vehicle.brand} ${vehicle.model}`;
 
-    // Popola il modulo
     document.getElementById('brand').value = vehicle.brand;
     document.getElementById('model').value = vehicle.model;
     document.getElementById('plate').value = vehicle.plate;
     document.getElementById('year').value = vehicle.year;
     document.getElementById('currentKm').value = vehicle.currentKm;
 
-    dialogAddVehicleEl.classList.add('show');
+    modalManager.open(dialogAddVehicleEl);
 }
 
 async function handleSaveVehicle(event) {
@@ -599,7 +603,7 @@ async function handleSaveVehicle(event) {
     }
 
     const vehicleData = {
-        id: vehicleId, // Sarà null per la creazione
+        id: vehicleId,
         brand: document.getElementById('brand').value.trim(),
         model: document.getElementById('model').value.trim(),
         plate: plateInput,
@@ -610,7 +614,7 @@ async function handleSaveVehicle(event) {
     const savedVehicle = await saveVehicle(vehicleData);
 
     if (savedVehicle) {
-        dialogAddVehicleEl.classList.remove('show');
+        modalManager.close(dialogAddVehicleEl);
         await loadData();
     }
 }
@@ -625,9 +629,8 @@ async function handleDeleteVehicle(vehicleId) {
         async () => {
             const success = await deleteVehicle(vehicleId);
             if (success) {
-                // Se è aperto il modale dei dettagli, chiudilo
                 if (currentVehicle && currentVehicle.id === vehicleId) {
-                    dialogVehicleDetailsEl.classList.remove('show');
+                    modalManager.close(dialogVehicleDetailsEl);
                     currentVehicle = null;
                 }
                 await loadData();
@@ -636,22 +639,24 @@ async function handleDeleteVehicle(vehicleId) {
     );
 }
 
-/* --- MANUTENZIONI --- */
+
+// ===================================
+// GESTIONE EVENTI - MANUTENZIONI
+// ===================================
 
 function handleAddMaintenance(vehicleId) {
     const vehicle = getVehicleById(vehicleId);
     if (!vehicle) return;
 
-    currentVehicle = vehicle; // Imposta il veicolo corrente per il modale
-    currentMaintenance = null; // Stiamo aggiungendo, non modificando
+    currentVehicle = vehicle;
+    currentMaintenance = null;
     
     formAddMaintenanceEl.reset();
     
-    // Popola i tipi di manutenzione e l'info del veicolo
     populateMaintenanceTypeSelect('type');
     document.getElementById('maintenanceVehicleInfo').textContent = `${vehicle.brand} ${vehicle.model} - ${vehicle.plate}`;
     
-    dialogAddMaintenanceEl.classList.add('show');
+    modalManager.open(dialogAddMaintenanceEl);
 }
 
 function handleEditMaintenance(maintenanceId) {
@@ -660,11 +665,9 @@ function handleEditMaintenance(maintenanceId) {
 
     currentMaintenance = maintenance;
     
-    // Popola info modale
     document.getElementById('dialogEditMaintenanceTitle').textContent = `Modifica Manutenzione: ${maintenance.type}`;
     document.getElementById('editMaintenanceVehicleInfo').textContent = `${currentVehicle.brand} ${currentVehicle.model} - ${currentVehicle.plate}`;
 
-    // Popola il select con l'opzione corretta preselezionata
     populateMaintenanceTypeSelect('editType', maintenance.type);
     document.getElementById('editDueDate').value = maintenance.dueDate || '';
     document.getElementById('editDueKm').value = maintenance.dueKm || '';
@@ -672,7 +675,7 @@ function handleEditMaintenance(maintenanceId) {
     document.getElementById('editNotes').value = maintenance.notes || '';
     document.getElementById('editCompleted').checked = maintenance.completed;
     
-    dialogEditMaintenanceEl.classList.add('show');
+    modalManager.open(dialogEditMaintenanceEl);
 }
 
 async function handleSaveMaintenance(event) {
@@ -709,9 +712,8 @@ async function handleSaveMaintenance(event) {
     const savedMaintenance = await saveMaintenance(maintenance);
 
     if (savedMaintenance) {
-        dialogAddMaintenanceEl.classList.remove('show');
+        modalManager.close(dialogAddMaintenanceEl);
         await loadData();
-        // Aggiorna la vista dettagli
         handleViewDetails(currentVehicle.id);
     }
 }
@@ -732,7 +734,7 @@ async function handleEditSaveMaintenance(event) {
     const isCompleted = document.getElementById('editCompleted').checked;
 
     const maintenance = {
-        ...currentMaintenance, // Mantiene l'id e vehicleId
+        ...currentMaintenance,
         type: document.getElementById('editType').value.trim(),
         dueDate: dueDate,
         dueKm: document.getElementById('editDueKm').value ? parseInt(document.getElementById('editDueKm').value) : null,
@@ -750,7 +752,7 @@ async function handleEditSaveMaintenance(event) {
     const savedMaintenance = await saveMaintenance(maintenance);
 
     if (savedMaintenance) {
-        dialogEditMaintenanceEl.classList.remove('show');
+        modalManager.close(dialogEditMaintenanceEl);
         await loadData();
         handleViewDetails(currentVehicle.id);
     }
@@ -788,12 +790,15 @@ async function handleToggleComplete(maintenanceId, newCompletedStatus) {
     if (savedMaintenance) {
         await loadData();
         if (currentVehicle && currentVehicle.id === savedMaintenance.vehicleId) {
-            handleViewDetails(currentVehicle.id); // Ricarica i dettagli
+            handleViewDetails(currentVehicle.id);
         }
     }
 }
 
-/* --- DETTAGLI VEICOLO --- */
+
+// ===================================
+// GESTIONE EVENTI - DETTAGLI VEICOLO
+// ===================================
 
 function handleViewDetails(vehicleId) {
     const vehicle = getVehicleById(vehicleId);
@@ -802,12 +807,10 @@ function handleViewDetails(vehicleId) {
     currentVehicle = vehicle;
     const vehicleMaintenances = maintenances.filter(m => m.vehicleId === vehicleId);
 
-    // 1. Set dialog info
     document.getElementById('detailsVehicleName').textContent = `${vehicle.brand} ${vehicle.model}`;
     document.getElementById('detailsVehicleInfo').textContent = `${vehicle.plate} - Anno ${vehicle.year || 'N/D'}`;
     document.getElementById('updateKm').value = vehicle.currentKm || 0;
 
-    // 2. Render maintenances
     const maintenancesListEl = document.getElementById('maintenancesList');
     maintenancesListEl.innerHTML = '';
     const noMaintenanceStateEl = document.getElementById('noMaintenanceState');
@@ -819,25 +822,21 @@ function handleViewDetails(vehicleId) {
         noMaintenanceStateEl.style.display = 'none';
         maintenancesListEl.style.display = 'flex';
         
-        // Ordina: Scaduti > Imminenti > Non in scadenza > Completati (dal più recente)
         vehicleMaintenances.sort((a, b) => {
             const aCheck = checkMaintenanceDue(a, vehicle.currentKm);
             const bCheck = checkMaintenanceDue(b, vehicle.currentKm);
             
-            // Completati vanno in fondo, ordinati per data completamento
             if (a.completed && !b.completed) return 1;
             if (!a.completed && b.completed) return -1;
             if (a.completed && b.completed) {
-                return new Date(b.completedAt) - new Date(a.completedAt); // Più recente prima
+                return new Date(b.completedAt) - new Date(a.completedAt);
             }
             
-            // Per i non completati, usa lo stato di alert
             if (aCheck.status === 'overdue' && bCheck.status !== 'overdue') return -1;
             if (aCheck.status !== 'overdue' && bCheck.status === 'overdue') return 1;
             if (aCheck.status === 'imminent' && bCheck.status === 'none') return -1;
             if (aCheck.status === 'none' && bCheck.status === 'imminent') return 1;
 
-            // Se gli stati sono uguali (es. entrambi 'imminent'), ordina per scadenza più vicina (vedi checkAllMaintenances)
             const aValue = aCheck.daysUntil < aCheck.kmUntil / 50 ? aCheck.daysUntil : aCheck.kmUntil / 50; 
             const bValue = bCheck.daysUntil < bCheck.kmUntil / 50 ? bCheck.daysUntil : bCheck.kmUntil / 50; 
             
@@ -891,7 +890,7 @@ function handleViewDetails(vehicleId) {
         });
     }
 
-    dialogVehicleDetailsEl.classList.add('show');
+    modalManager.open(dialogVehicleDetailsEl);
 }
 
 async function handleUpdateKm(event) {
@@ -918,104 +917,91 @@ async function handleUpdateKm(event) {
     const savedVehicle = await saveVehicle(updatedVehicle);
 
     if (savedVehicle) {
-        // Aggiorna l'oggetto locale e ricarica tutto
         await loadData();
-        // Ricarica la vista dettagli con i nuovi dati
         handleViewDetails(currentVehicle.id); 
     }
 }
 
-/* --- FUNZIONI DI SUPPORTO PER DIALOGS --- */
+
+// ===================================
+// FUNZIONI DI SUPPORTO DIALOGS
+// ===================================
 
 function showConfirmDialog(title, message, onConfirm) {
     document.getElementById('confirmDialogTitle').textContent = title;
     document.getElementById('confirmDialogMessage').textContent = message;
     
-    // Rimuove e ri-aggiunge l'event listener per evitare multiple esecuzioni
     const oldBtn = document.getElementById('btnConfirmAction');
     const newBtn = oldBtn.cloneNode(true);
     oldBtn.parentNode.replaceChild(newBtn, oldBtn);
     
     newBtn.addEventListener('click', () => {
         onConfirm();
-        dialogConfirmEl.classList.remove('show');
+        modalManager.close(dialogConfirmEl);
     }, { once: true });
     
-    dialogConfirmEl.classList.add('show');
+    modalManager.open(dialogConfirmEl);
 }
 
 function showAlertDialog(title, message) {
     document.getElementById('alertDialogTitle').textContent = title;
     document.getElementById('alertDialogMessage').textContent = message;
-    dialogAlertEl.classList.add('show');
+    modalManager.open(dialogAlertEl);
 }
 
 
 // ===================================
-// INIZIALIZZAZIONE E LISTENERS
+// INIZIALIZZAZIONE APP
 // ===================================
 
 const initApp = async () => {
-    // 1. Inizializza Tema
     setTheme(getInitialTheme());
     document.getElementById('themeToggle').addEventListener('click', () => {
         const currentTheme = document.documentElement.getAttribute('data-theme');
         setTheme(currentTheme === 'dark' ? 'light' : 'dark');
     });
 
-    // 2. Carica tipi di manutenzione dal JSON
     await loadMaintenanceTypes();
-    
-    // 3. Carica i dati iniziali dal Backend
     await loadData(); 
     
-    // --- LISTENERS MODALI ---
-    
-    // Apertura modali aggiunta
     document.getElementById('btnAddVehicle').addEventListener('click', handleAddVehicle);
     document.getElementById('btnAddVehicleEmpty').addEventListener('click', handleAddVehicle);
     
-    // Salvataggio form veicolo
     formAddVehicleEl.addEventListener('submit', handleSaveVehicle);
-    
-    // Salvataggio form nuova manutenzione
     formAddMaintenanceEl.addEventListener('submit', handleSaveMaintenance);
-    
-    // Salvataggio form modifica manutenzione
     formEditMaintenanceEl.addEventListener('submit', handleEditSaveMaintenance);
-    
-    // Aggiornamento KM
     formUpdateKmEl.addEventListener('submit', handleUpdateKm);
     
-    // Chiusura Modali Generiche
-    document.getElementById('btnCancelVehicle').addEventListener('click', () => dialogAddVehicleEl.classList.remove('show'));
-    document.getElementById('btnCancelMaintenance').addEventListener('click', () => dialogAddMaintenanceEl.classList.remove('show'));
-    document.getElementById('btnCancelAddMaintenance').addEventListener('click', () => dialogAddMaintenanceEl.classList.remove('show'));
-    document.getElementById('btnCancelEditMaintenance').addEventListener('click', () => dialogEditMaintenanceEl.classList.remove('show'));
-    document.getElementById('btnCloseDetails').addEventListener('click', () => { dialogVehicleDetailsEl.classList.remove('show'); currentVehicle = null; });
+    document.getElementById('btnCancelAddVehicle').addEventListener('click', () => modalManager.close(dialogAddVehicleEl));
+    document.getElementById('btnCancelVehicle').addEventListener('click', () => modalManager.close(dialogAddVehicleEl));
+    document.getElementById('btnCancelMaintenance').addEventListener('click', () => modalManager.close(dialogAddMaintenanceEl));
+    document.getElementById('btnCancelAddMaintenance').addEventListener('click', () => modalManager.close(dialogAddMaintenanceEl));
+    document.getElementById('btnCancelEditMaintenance').addEventListener('click', () => modalManager.close(dialogEditMaintenanceEl));
+    document.getElementById('btnCloseDetails').addEventListener('click', () => { 
+        modalManager.close(dialogVehicleDetailsEl); 
+        currentVehicle = null; 
+    });
     
-    // Chiusura Modali di sistema
-    document.getElementById('btnCloseConfirm').addEventListener('click', () => dialogConfirmEl.classList.remove('show'));
-    document.getElementById('btnCancelConfirm').addEventListener('click', () => dialogConfirmEl.classList.remove('show'));
-    document.getElementById('btnCloseAlert').addEventListener('click', () => dialogAlertEl.classList.remove('show'));
-    document.getElementById('btnCloseAlertAction').addEventListener('click', () => dialogAlertEl.classList.remove('show'));
+    document.getElementById('btnCloseConfirm').addEventListener('click', () => modalManager.close(dialogConfirmEl));
+    document.getElementById('btnCancelConfirm').addEventListener('click', () => modalManager.close(dialogConfirmEl));
+    document.getElementById('btnCloseAlert').addEventListener('click', () => modalManager.close(dialogAlertEl));
+    document.getElementById('btnCloseAlertAction').addEventListener('click', () => modalManager.close(dialogAlertEl));
 
-    // Azioni in Dettagli Veicolo (collegate agli handlers principali)
     document.getElementById('btnEditVehicleFromDetails').addEventListener('click', () => { 
         if (!currentVehicle) return; 
-        dialogVehicleDetailsEl.classList.remove('show'); 
-        setTimeout(() => handleEditVehicle(currentVehicle.id), 300); // Ritardo per l'animazione
+        modalManager.close(dialogVehicleDetailsEl); 
+        setTimeout(() => handleEditVehicle(currentVehicle.id), 300);
     });
     
     document.getElementById('btnDeleteVehicleFromDetails').addEventListener('click', () => {
         if (!currentVehicle) return;
-        dialogVehicleDetailsEl.classList.remove('show');
+        modalManager.close(dialogVehicleDetailsEl);
         handleDeleteVehicle(currentVehicle.id); 
     });
     
     document.getElementById('btnAddMaintenanceFromDetails').addEventListener('click', () => {
         if (!currentVehicle) return;
-        dialogVehicleDetailsEl.classList.remove('show');
+        modalManager.close(dialogVehicleDetailsEl);
         setTimeout(() => handleAddMaintenance(currentVehicle.id), 300);
     });
 };

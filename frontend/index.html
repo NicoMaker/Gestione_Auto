@@ -2,13 +2,15 @@
 <html lang="it" data-theme="light">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AutoTrack - Gestione Veicoli</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <meta name="theme-color" content="#667eea">
+  <title>AutoTrack - Gestione Intelligente Veicoli</title>
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
   
+  <!-- HEADER -->
   <header class="header">
     <div class="container header-content">
       <div class="logo-section">
@@ -17,7 +19,7 @@
         </div>
         <div class="logo-text">
           <h1>AutoTrack</h1>
-          <p>Gestione intelligente dei tuoi veicoli</p>
+          <p class="logo-subtitle">Gestione intelligente dei tuoi veicoli</p>
         </div>
       </div>
       <div class="header-actions">
@@ -28,17 +30,20 @@
     </div>
   </header>
 
+  <!-- HERO SECTION -->
   <section class="hero">
     <div class="container">
       <div class="hero-content">
         <h2 class="hero-title">Gestisci i tuoi veicoli in modo semplice</h2>
-        <p class="hero-subtitle">Monitora manutenzioni, scadenze e chilometraggio</p>
+        <p class="hero-subtitle">Monitora manutenzioni, scadenze e chilometraggio con AutoTrack</p>
       </div>
     </div>
   </section>
 
+  <!-- MAIN CONTENT -->
   <main class="container main-content">
     
+    <!-- STATS SECTION -->
     <section class="stats-section">
       <div class="stat-card stat-card-primary">
         <div class="stat-icon">
@@ -81,6 +86,7 @@
       </div>
     </section>
 
+    <!-- ALERTS SECTION -->
     <section id="alertsSection" class="alerts-section" style="display: none;">
       <div class="section-header">
         <div class="section-title">
@@ -88,10 +94,10 @@
           <h2>Notifiche e Scadenze</h2>
         </div>
       </div>
-      <div id="alertsContainer" class="alerts-container">
-        </div>
+      <div id="alertsContainer" class="alerts-container"></div>
     </section>
 
+    <!-- VEHICLES SECTION -->
     <section class="vehicles-section">
       <div class="section-header">
         <div class="section-title">
@@ -104,8 +110,7 @@
         </button>
       </div>
       
-      <div id="vehiclesContainer" class="vehicles-grid">
-        </div>
+      <div id="vehiclesContainer" class="vehicles-grid"></div>
 
       <div id="emptyState" class="empty-state" style="display: none;">
         <i class="fas fa-car-crash"></i>
@@ -115,16 +120,16 @@
           <i class="fas fa-plus"></i> Aggiungi Veicolo
         </button>
       </div>
-
     </section>
-
   </main>
 
+  <!-- MODAL: ADD VEHICLE -->
   <div id="dialogAddVehicle" class="modal">
-    <div class="modal-content">
+    <div class="modal-overlay" onclick="document.getElementById('btnCancelAddVehicle').click()"></div>
+    <div class="modal-content modal-medium">
       <div class="modal-header">
         <h3 id="dialogAddVehicleTitle">Aggiungi Nuovo Veicolo</h3>
-        <button class="modal-close" id="btnCancelAddVehicle">
+        <button class="modal-close" id="btnCancelAddVehicle" aria-label="Chiudi dialog">
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -132,16 +137,16 @@
         <form id="formAddVehicle">
           <div class="form-group">
             <label for="brand"><i class="fas fa-trademark"></i> Marca</label>
-            <input type="text" id="brand" required placeholder="Es. Fiat">
+            <input type="text" id="brand" required placeholder="Es. Fiat" autocomplete="off">
           </div>
           <div class="form-group">
             <label for="model"><i class="fas fa-car"></i> Modello</label>
-            <input type="text" id="model" required placeholder="Es. Panda">
+            <input type="text" id="model" required placeholder="Es. Panda" autocomplete="off">
           </div>
           <div class="form-group-row">
             <div class="form-group">
               <label for="plate"><i class="fas fa-barcode"></i> Targa</label>
-              <input type="text" id="plate" required placeholder="Es. AA000BB">
+              <input type="text" id="plate" required placeholder="Es. AA000BB" autocomplete="off">
             </div>
             <div class="form-group">
               <label for="year"><i class="fas fa-calendar-alt"></i> Anno</label>
@@ -163,20 +168,21 @@
     </div>
   </div>
 
-  <div id="dialogVehicleDetails" class="modal modal-large">
-    <div class="modal-content">
+  <!-- MODAL: VEHICLE DETAILS -->
+  <div id="dialogVehicleDetails" class="modal">
+    <div class="modal-overlay" onclick="document.getElementById('btnCloseDetails').click()"></div>
+    <div class="modal-content modal-large">
       <div class="modal-header">
         <div>
           <h3 id="detailsVehicleName">Nome Veicolo</h3>
           <p id="detailsVehicleInfo" class="text-muted">Targa - Anno</p>
         </div>
-        <button class="modal-close" id="btnCloseDetails">
+        <button class="modal-close" id="btnCloseDetails" aria-label="Chiudi dialog">
           <i class="fas fa-times"></i>
         </button>
       </div>
       <div class="modal-body">
         <div class="details-grid">
-          
           <div class="details-column details-info">
             <h4>Dettagli & Aggiorna Km</h4>
             <form id="formUpdateKm" class="km-input-group">
@@ -205,8 +211,7 @@
                 <i class="fas fa-plus"></i> Nuova
               </button>
             </div>
-            <div id="maintenancesList" class="maintenances-list">
-              </div>
+            <div id="maintenancesList" class="maintenances-list"></div>
             <div id="noMaintenanceState" class="empty-state-small" style="display: none;">
               <p>Nessuna manutenzione registrata.</p>
             </div>
@@ -216,12 +221,16 @@
     </div>
   </div>
 
+  <!-- MODAL: ADD MAINTENANCE -->
   <div id="dialogAddMaintenance" class="modal">
-    <div class="modal-content">
+    <div class="modal-overlay" onclick="document.getElementById('btnCancelAddMaintenance').click()"></div>
+    <div class="modal-content modal-medium">
       <div class="modal-header">
-        <h3 id="dialogAddMaintenanceTitle">Aggiungi Nuova Manutenzione</h3>
-        <p id="maintenanceVehicleInfo" class="text-muted"></p>
-        <button class="modal-close" id="btnCancelAddMaintenance">
+        <div>
+          <h3 id="dialogAddMaintenanceTitle">Aggiungi Nuova Manutenzione</h3>
+          <p id="maintenanceVehicleInfo" class="text-muted"></p>
+        </div>
+        <button class="modal-close" id="btnCancelAddMaintenance" aria-label="Chiudi dialog">
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -229,8 +238,7 @@
         <form id="formAddMaintenance">
           <div class="form-group">
             <label for="type"><i class="fas fa-tag"></i> Tipo di Manutenzione</label>
-            <select id="type" required>
-              </select>
+            <select id="type" required></select>
           </div>
           <div class="form-group-row">
             <div class="form-group">
@@ -272,12 +280,16 @@
     </div>
   </div>
 
+  <!-- MODAL: EDIT MAINTENANCE -->
   <div id="dialogEditMaintenance" class="modal">
-    <div class="modal-content">
+    <div class="modal-overlay" onclick="document.getElementById('btnCancelEditMaintenance').click()"></div>
+    <div class="modal-content modal-medium">
       <div class="modal-header">
-        <h3 id="dialogEditMaintenanceTitle">Modifica Manutenzione</h3>
-        <p id="editMaintenanceVehicleInfo" class="text-muted"></p>
-        <button class="modal-close" id="btnCancelEditMaintenance">
+        <div>
+          <h3 id="dialogEditMaintenanceTitle">Modifica Manutenzione</h3>
+          <p id="editMaintenanceVehicleInfo" class="text-muted"></p>
+        </div>
+        <button class="modal-close" id="btnCancelEditMaintenance" aria-label="Chiudi dialog">
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -285,8 +297,7 @@
         <form id="formEditMaintenance">
           <div class="form-group">
             <label for="editType"><i class="fas fa-tag"></i> Tipo di Manutenzione</label>
-            <select id="editType" required>
-              </select>
+            <select id="editType" required></select>
           </div>
           <div class="form-group-row">
             <div class="form-group">
@@ -327,11 +338,13 @@
     </div>
   </div>
 
+  <!-- MODAL: CONFIRM -->
   <div id="dialogConfirm" class="modal">
+    <div class="modal-overlay" onclick="document.getElementById('btnCloseConfirm').click()"></div>
     <div class="modal-content modal-small">
       <div class="modal-header">
         <h3 id="confirmDialogTitle">Conferma Azione</h3>
-        <button class="modal-close" id="btnCloseConfirm">
+        <button class="modal-close" id="btnCloseConfirm" aria-label="Chiudi dialog">
           <i class="fas fa-times"></i>
         </button>
       </div>
@@ -345,11 +358,13 @@
     </div>
   </div>
 
+  <!-- MODAL: ALERT -->
   <div id="dialogAlert" class="modal">
+    <div class="modal-overlay" onclick="document.getElementById('btnCloseAlert').click()"></div>
     <div class="modal-content modal-small">
       <div class="modal-header">
         <h3 id="alertDialogTitle">Attenzione</h3>
-        <button class="modal-close" id="btnCloseAlert">
+        <button class="modal-close" id="btnCloseAlert" aria-label="Chiudi dialog">
           <i class="fas fa-times"></i>
         </button>
       </div>

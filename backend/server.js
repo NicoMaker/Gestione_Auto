@@ -1,6 +1,7 @@
 // server.js
 const express = require("express");
 const path = require("path");
+const cors = require("cors"); // <-- IMPORTANTE: Aggiunto l'importazione di cors
 const { getDB } = require("./database"); // Importa la funzione di connessione al DB
 
 const app = express();
@@ -8,6 +9,7 @@ const PORT = 3000;
 
 // Middleware
 app.use(express.json()); // Per parsare il body delle richieste JSON
+app.use(cors()); // <-- RISOLUZIONE CORS: Abilita il Cross-Origin Resource Sharing
 // Serve i file statici (index.html, script.js, styles.css) dalla radice del progetto
 app.use(express.static(path.join(__dirname, "../frontend")));
 

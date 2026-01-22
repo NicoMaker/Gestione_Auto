@@ -1007,3 +1007,137 @@ const initApp = async () => {
 };
 
 document.addEventListener('DOMContentLoaded', initApp);
+
+// ===================================
+// GESTIONE NOTIFICHE - Aggiungi PRIMA di initApp()
+// ===================================
+
+async function checkAndShowNotificationBanner() {
+    if (!('Notification' in window)) return;
+    
+    const permission = Notification.permission;
+    const banner = document.getElementById('notificationBanner');
+    const dismissKey = 'notification-banner-dismissed';
+    
+    // Mostra il banner solo se:
+    // 1. Le notifiche non sono attivate
+    // 2. L'utente non ha già chiuso il banner
+    // 3. Ci sono manutenzioni in scadenza
+    if (permission === 'default' && !localStorage.getItem(dismissKey) && alerts.length > 0) {
+        banner.style.display = 'block';
+    } else {
+        banner.style.display = 'none';
+    }
+}
+
+async function handleEnableNotifications() {
+    const result = await notificationManager.requestPermission();
+    
+    if (result.success) {
+        showAlertDialog('Notifiche Attivate! 🎉', result.message);
+        document.getElementById('notificationBanner').style.display = 'none';
+    } else {
+        showAlertDialog('Impossibile Attivare le Notifiche', result.message);
+    }
+}
+
+function handleDismissBanner() {
+    document.getElementById('notificationBanner').style.display = 'none';
+    localStorage.setItem('notification-banner-dismissed', 'true');
+}
+
+// ===================================
+// MODIFICA LA FUNZIONE loadData - Sostituisci la funzione esistente
+// ===================================
+
+async function loadData() {
+    [vehicles, maintenances] = await Promise.all([getVehicles(), getMaintenances()]);
+    alerts = checkAllMaintenances(vehicles, maintenances);
+    renderStats();
+    renderAlerts();
+    renderVehicles();
+    
+    // Controlla e mostra il banner delle notifiche
+    await checkAndShowNotificationBanner();
+    
+    // Se le notifiche sono attive, controlla le manutenzioni
+    if (notificationManager && Notification.permission === 'granted') {
+        notificationManager.checkMaintenances();
+    }
+}
+
+// ===================================
+// MODIFICA LA FUNZIONE initApp - Aggiungi questi event listeners
+// ===================================
+
+const initApp = async () => {
+    setTheme(getInitialTheme());
+    document.getElementById('themeToggle').addEventListener('click', () => {
+        const currentTheme = document.documentElement.getAttribute('data-theme');
+        setTheme(currentTheme === 'dark' ? 'light' : 'dark');
+    });
+
+    await loadMaintenanceTypes();
+    
+    // NUOVO: Inizializza il notification manager
+    if (window.notificationManager) {
+        await notificationManager.initialize();
+    }
+    
+    await loadData(); 
+    
+    // NUOVO: Event listeners per le notifiche
+    const btnEnableNotifications = document.getElementById('btnEnableNotifications');
+    const btnDismissBanner = document.getElementById('btnDismissBanner');
+    
+    if (btnEnableNotifications) {
+        btnEnableNotifications.addEventListener('click', handleEnableNotifications);
+    }
+    
+    if (btnDismissBanner) {
+        btnDismissBanner.addEventListener('click', handleDismissBanner);
+    }
+    
+    document.getElementById('btnAddVehicle').addEventListener('click', handleAddVehicle);
+    document.getElementById('btnAddVehicleEmpty').addEventListener('click', handleAddVehicle);
+    
+    formAddVehicleEl.addEventListener('submit', handleSaveVehicle);
+    formAddMaintenanceEl.addEventListener('submit', handleSaveMaintenance);
+    formEditMaintenanceEl.addEventListener('submit', handleEditSaveMaintenance);
+    formUpdateKmEl.addEventListener('submit', handleUpdateKm);
+    
+    document.getElementById('btnCancelAddVehicle').addEventListener('click', () => modalManager.close(dialogAddVehicleEl));
+    document.getElementById('btnCancelVehicle').addEventListener('click', () => modalManager.close(dialogAddVehicleEl));
+    document.getElementById('btnCancelMaintenance').addEventListener('click', () => modalManager.close(dialogAddMaintenanceEl));
+    document.getElementById('btnCancelAddMaintenance').addEventListener('click', () => modalManager.close(dialogAddMaintenanceEl));
+    document.getElementById('btnCancelEditMaintenance').addEventListener('click', () => modalManager.close(dialogEditMaintenanceEl));
+    document.getElementById('btnCloseDetails').addEventListener('click', () => { 
+        modalManager.close(dialogVehicleDetailsEl); 
+        currentVehicle = null; 
+    });
+    
+    document.getElementById('btnCloseConfirm').addEventListener('click', () => modalManager.close(dialogConfirmEl));
+    document.getElementById('btnCancelConfirm').addEventListener('click', () => modalManager.close(dialogConfirmEl));
+    document.getElementById('btnCloseAlert').addEventListener('click', () => modalManager.close(dialogAlertEl));
+    document.getElementById('btnCloseAlertAction').addEventListener('click', () => modalManager.close(dialogAlertEl));
+
+    document.getElementById('btnEditVehicleFromDetails').addEventListener('click', () => { 
+        if (!currentVehicle) return; 
+        modalManager.close(dialogVehicleDetailsEl); 
+        setTimeout(() => handleEditVehicle(currentVehicle.id), 300);
+    });
+    
+    document.getElementById('btnDeleteVehicleFromDetails').addEventListener('click', () => {
+        if (!currentVehicle) return;
+        modalManager.close(dialogVehicleDetailsEl);
+        handleDeleteVehicle(currentVehicle.id); 
+    });
+    
+    document.getElementById('btnAddMaintenanceFromDetails').addEventListener('click', () => {
+        if (!currentVehicle) return;
+        modalManager.close(dialogVehicleDetailsEl);
+        setTimeout(() => handleAddMaintenance(currentVehicle.id), 300);
+    });
+};
+
+document.addEventListener('DOMContentLoaded', initApp);

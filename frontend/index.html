@@ -65,6 +65,28 @@
         </div>
       </div>
 
+        <section id="notificationBanner" class="notification-banner" style="display: none;">
+    <div class="container">
+      <div class="notification-banner-content">
+        <div class="notification-banner-icon">
+          <i class="fas fa-bell"></i>
+        </div>
+        <div class="notification-banner-text">
+          <h4>Attiva le Notifiche Push</h4>
+          <p>Ricevi avvisi automatici quando le tue manutenzioni sono in scadenza</p>
+        </div>
+        <div class="notification-banner-actions">
+          <button id="btnEnableNotifications" class="btn btn-primary">
+            <i class="fas fa-bell"></i> Attiva Notifiche
+          </button>
+          <button id="btnDismissBanner" class="btn-icon" aria-label="Chiudi banner">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
       <div class="stat-card stat-card-warning">
         <div id="alertsIcon" class="stat-icon">
           <i class="fas fa-exclamation-triangle"></i>
@@ -378,5 +400,6 @@
   </div>
 
   <script src="script.js"></script>
+    <script src="notifications.js"></script>
 </body>
 </html>

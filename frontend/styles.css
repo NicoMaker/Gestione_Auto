@@ -1254,3 +1254,108 @@ input:checked + .slider::before {
     padding: 40px 24px;
   }
 }
+
+/* ===== NOTIFICATION BANNER ===== */
+.notification-banner {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  padding: 20px 0;
+  margin-top: -35px;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 10;
+  animation: slideDown 0.5s ease-out;
+}
+
+.notification-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.notification-banner-icon {
+  width: 56px;
+  height: 56px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: white;
+  flex-shrink: 0;
+  animation: bellRing 2s infinite;
+}
+
+.notification-banner-text {
+  flex-grow: 1;
+  color: white;
+}
+
+.notification-banner-text h4 {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.notification-banner-text p {
+  font-size: 14px;
+  opacity: 0.9;
+  margin: 0;
+}
+
+.notification-banner-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.notification-banner-actions .btn-icon {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.notification-banner-actions .btn-icon:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Animazione campanella */
+@keyframes bellRing {
+  0%, 100% { transform: rotate(0deg); }
+  10%, 30% { transform: rotate(-15deg); }
+  20%, 40% { transform: rotate(15deg); }
+  50% { transform: rotate(0deg); }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive per banner notifiche */
+@media (max-width: 768px) {
+  .notification-banner-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+  }
+
+  .notification-banner-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .notification-banner-actions .btn {
+    width: 100%;
+  }
+}
